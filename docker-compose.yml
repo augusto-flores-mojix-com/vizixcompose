@@ -387,3 +387,39 @@ services:
       VIZIX_KAFKA_CODE: starflex
 #    volumes:
 #      - ${VIZIX_DATA_PATH}/actionprocessor-data:/var/vizix
+  monitoring-api:
+    image: mojix/monitoring-api:v6.59.0
+    container_name: shopcxMonitoringApi
+    environment:
+      configuration.api.host: 'internaltransformer'
+      configuration.api.war.name : '/statemachine-api-configuration'
+      metrics.elasticsearch.host : 'shopcx-elasticsearch-monitoring'
+      location.api.host : 'internaltransformer'
+      location.api.war.name : 'statemachine-api-configuration'
+      JAVA_OPTS: '-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1  -XshowSettings:vm'
+
+  shopcx-kibana:
+    image: docker.elastic.co/kibana/kibana:5.4.0
+    container_name: shopcxKibana
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://shopcx-elasticsearch-monitoring:9200
+      SERVER_NAME: shopcx-kibana
+
+  shopcx-elasticsearch-monitoring:
+    container_name: shopcxElasticSearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.0
+    environment:
+      cluster.name: docker-cluster
+      xpack.security.enabled: 'false'
+    volumes:
+      - /elasticsearch/shopcx-es:/home/augusto/vizix/vizix-compose/elasticsearch/data ## This folder should be executed and apply the following commands:
+        ##    chmod -R o+w <target_folder>
+        ##    sysctl -w vm.max_map_count=262144
+        ##    sysctl -w vm.max_map_count=262144 && echo 'vm.max_map_count=262144' >> /etc/sysctl.conf
+        ##    sysctl -p
+    ports:
+      - 9200:9200
+
+
