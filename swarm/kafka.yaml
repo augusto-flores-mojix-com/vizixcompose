@@ -1,0 +1,77 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  kafka:
+    image: mojix/kafka:v2.1.0
+    environment:
+      KAFKA_MAX_MEMORY: 6g
+      KAFKA_MIN_MEMORY: 4g
+      KAFKA_PARAM_BROKER_ID: 1
+      KAFKA_PARAM_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_PARAM_LISTENERS: PLAINTEXT://:9092
+      KAFKA_PARAM_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_PARAM_OFFSETS_RETENTION_MINUTES: '10080'
+      KAFKA_PARAM_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_PARAM_LOG_RETENTION_HOURS: 12
+      KAFKA_PARAM_LOG_RETENTION_BYTES: 1073741824
+      ## For KafkaSSL
+      #KAFKA_PARAM_LISTENERS: 'PLAINTEXT://kafka:9092,SSL://kafka:9093'
+      #KAFKA_PARAM_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,SSL://kafka:9093'
+      #KAFKA_PARAM_SSL_KEYSTORE_LOCATION: /certs/kafka.server.keystore.jks
+      #KAFKA_PARAM_SSL_KEYSTORE_PASSWORD: m0j1xInc
+      #KAFKA_PARAM_SSL_KEY_PASSWORD: m0j1xInc
+      #KAFKA_PARAM_SSL_TRUSTSTORE_LOCATION: /certs/kafka.server.truststore.jks
+      #KAFKA_PARAM_SSL_TRUSTSTORE_PASSWORD: m0j1xInc
+      #KAFKA_PARAM_SSL_CLIENT_AUTH: required
+      #KAFKA_PARAM_SECURITY_INTER_BROKER_PROTOCOL: SSL
+#    ports:
+#      - target: 9092
+#        published: 9092
+#        protocol: tcp
+#        mode: host
+    volumes:
+      - /data/kafka:/data
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+      resources:
+        limits:
+          memory: 7g
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: kafka
+
+
+  zookeeper:
+    image: zookeeper:3.4.12
+    ports:
+      - target: 2181
+        published: 2181
+        protocol: tcp
+        mode: host
+    networks:
+      - iot
+    volumes:
+      - /data/zookeeper/data:/data
+      - /data/zookeeper/datalog:/datalog
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: zookeeper

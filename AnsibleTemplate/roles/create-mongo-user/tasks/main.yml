@@ -1,0 +1,4 @@
+---
+# tasks file for roles/create-mongo-user
+- name: Create Mongo User
+  import_tasks: create_mongo.yml

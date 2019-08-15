@@ -1,0 +1,72 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  emq-master:
+    image: mojix/emqtt:2.2.0
+    networks:
+      iot:
+        aliases:
+          - mqtt.vizix.master
+    environment:
+      - EMQ_NAME=emq
+      - EMQ_HOST=mqtt.vizix.master
+      - EMQ_NODE__COOKIE=ef16498f66804df1cc6172f6996d5492
+      - EMQ_MAX_PACKET_SIZE=512000KB
+      - EMQ_MQTT_CLIENT_ENABLE_STATS=on
+      - EMQ_MQTT__SESSION__ENABLE_STATS=on
+      - EMQ_MQTT__CLIENT__IDLE_TIMEOUT=120s
+      - EMQ_LISTENER__API__MGMT=0.0.0.0:18083
+      - EMQ_MQTT__SESSION__MAX_INFLIGHT=1
+      - EMQ_MQTT__MQUEUE__MAX_LENGTH=0
+      - EMQ_MQTT__SESSION__EXPIRY_INTERVAL=5s
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp://##LOG_PAPERTRAIL_URL
+        tag: mqtt-master
+    ports:
+      - target: 1883
+        published: 1883
+        protocol: tcp
+        mode: host
+      - target: 18083
+        published: 18083
+        protocol: tcp
+        mode: host
+
+  emq-worker:
+    image: mojix/emqtt:2.2.0
+    environment:
+      - EMQ_JOIN_CLUSTER=emq@mqtt.vizix.master
+      - EMQ_NODE__COOKIE=ef16498f66804df1cc6172f6996d5492
+      - EMQ_MAX_PACKET_SIZE=512000KB
+      - EMQ_MQTT_CLIENT_ENABLE_STATS=on
+      - EMQ_MQTT__SESSION__ENABLE_STATS=on
+      - EMQ_MQTT__CLIENT__IDLE_TIMEOUT=120s
+      - EMQ_LISTENER__API__MGMT=0.0.0.0:18083
+      - EMQ_MQTT__SESSION__MAX_INFLIGHT=1
+      - EMQ_MQTT__MQUEUE__MAX_LENGTH=0
+      - EMQ_MQTT__SESSION__EXPIRY_INTERVAL=5s
+    depends_on:
+     - emq-master
+    networks:
+      - iot
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp://##LOG_PAPERTRAIL_URL
+        tag: mqtt-member
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.labels.host == ###HOST_LABEL

@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    mojix.service: zookeeper
+  name: zookeeper
+spec:
+  replicas: 1
+  selector:
+    mojix.service: zookeeper
+  strategy:
+    resources: {}
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: zookeeper
+    spec:
+      containers:
+      - image: zookeeper:3.4.10
+        name: zookeeper
+        ports:
+        - containerPort: 2181
+        resources: {}
+        volumeMounts:
+        - mountPath: /data
+          name: zookeeper-claim0
+        - mountPath: /datalog
+          name: zookeeper-claim1
+      hostname: zookeeper
+      restartPolicy: Always
+      volumes:
+      - name: zookeeper-claim0
+        persistentVolumeClaim:
+          claimName: zookeeper-claim0
+      - name: zookeeper-claim1
+        persistentVolumeClaim:
+          claimName: zookeeper-claim1
+  triggers:
+    - type: ConfigChange

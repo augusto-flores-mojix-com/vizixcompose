@@ -1,0 +1,24 @@
+# env file for ViZix
+.env
+
+# data folders
+data/
+
+# terraform modules and related files
+.terraform*
+terraform.tfstate*
+terraform.tfvars
+
+# Other artifacts
+*.zip
+
+# Drone secrets file
+secrets.yml
+
+# Ansible Hosts files
+AnsibleTemplate/hostsFiles/*
+AnsibleTemplate/*.retry
+!AnsibleTemplate/hostsFiles/hostsExample.ini
+
+.DS_Store
+.idea

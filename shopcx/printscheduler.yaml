@@ -1,0 +1,39 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+volumes:
+  static:
+
+services:
+
+  printscheduler:
+    image: mojix/riot-core-bridges:dev_6.x.x
+    ports:
+    - target: 8080
+      published: 8099
+      protocol: tcp
+      mode: host
+    environment:
+      VIZIX_BRIDGE_TYPE: printscheduler
+      VIZIX_KAFKA_SERVERS: kafka:9092
+      VIZIX_STATUS_CLEANER_JOB_CRON: "37 0/5 * * * ?"
+      VIZIX_PRINTING_API_HOST: 'printing-api'
+      VIZIX_PRINTING_API_PORT: 8080
+      VIZIX_PRINTING_API_WAR_NAME: 'printing-api'
+    networks:
+    - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+        - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ###
+        tag: printscheduler

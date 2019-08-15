@@ -1,0 +1,33 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  starflexcontrolapp:
+    image: mojix/riot-core-bridges:v6.45.0
+    environment:
+      MEM_XMX: 2g
+      MEM_XMS: 2g
+      VIZIX_BRIDGE_TYPE: STARFLEXCONTROLAPP
+      VIZIX_KAFKA_SERVERS: kafka:9092
+      VIZIX_KAFKA_CODE: STARFLEX
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels. ##LABEL == ##HOST
+      resources:
+        limits:
+          memory: 3g
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##LOGS
+        tag: starflexcontrolapp

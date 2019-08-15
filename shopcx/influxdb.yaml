@@ -1,0 +1,23 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  influxdb:
+    image: influxdb:1.5-alpine
+    volumes:
+    - /data/influxdb/data:/var/lib/influxdb
+#    ports:
+#    - "8086:8086"
+#    - "8083:8083"
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == #host
+          

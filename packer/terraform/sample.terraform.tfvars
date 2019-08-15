@@ -1,0 +1,7 @@
+packet_api_key = ""
+packet_project_id = ""
+aws_access_key = ""
+aws_secret_key = ""
+vizix_version = ""
+docker_hub_username = ""
+docker_hub_password = ""

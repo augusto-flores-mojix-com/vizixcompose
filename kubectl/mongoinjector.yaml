@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongoinjector
+  labels:
+    mojix.service: mongoinjector
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      mojix.service: mongoinjector
+#    matchLabels:
+#      app: ui
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: mongoinjector
+    spec:
+      containers:
+      - name: mongoinjector
+        resources:
+          limits:
+            memory: 6Gi
+        image: mojix/riot-core-bridges:v6.37.0
+#        ports:
+#       - containerPort: 80
+        env:
+          - name: MEM_XMS
+            value: "4g"
+          - name: MEM_XMX
+            value: "4g"
+          - name: VIZIX_BRIDGE_TYPE
+            value: "mongoingestor"
+          - name: VIZIX_KAFKA_SERVERS
+            value: "kafka1:9092,kafka2:9092,kafka3:9092"
+          - name: VIZIX_MONGO_WRITE_CONCERN
+            value: "ACKNOWLEDGED"
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: mongoinjector
+      restartPolicy: Always

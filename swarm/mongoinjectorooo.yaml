@@ -1,0 +1,42 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  mongoinjectorooo:
+    image: mojix/riot-core-bridges:v6.45.0
+    environment:
+      MEM_XMS: $MEM_XMX
+      MEM_XMX: 4g
+      VIZIX_BRIDGE_TYPE: mongoingestor
+      VIZIX_KAFKA_SERVERS: kafka:9092
+      VIZIX_MONGO_WRITE_CONCERN: ACKNOWLEDGED
+      VIZIX_IS_OOO_FIXER: "true"  ## this need RP to have OOO Enabled
+      #VIZIX_KAFKA_PARAM_STREAM_HEARTBEAT_INTERVAL_MS: 3000  Un tercio del session timoute
+      #VIZIX_KAFKA_PARAM_STREAM_SESSION_TIMEOUT_MS: 10000 
+      #VIZIX_KAFKA_CACHE_TICKLE_MODE: 'MONGO_INJECTOR'   Uncomment when you need to run more than 1 mongoinjector
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+      resources:
+        limits:
+          memory: 5g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/status"]
+      interval: 50s
+      timeout: 10s
+      retries: 2
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: mongoinjectorooo

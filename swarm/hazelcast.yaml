@@ -1,0 +1,28 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  hazelcast:
+    image: mojix/vizix-hc-server:develop
+    environment:
+      MEM_XMS: 768m
+      MEM_XMX: 2g
+      VIZIX_HAZELCAST_PUBLIC_ADDRESS: hazelcast
+      VIZIX_HAZELCAST_MEMBER_LIST: hazelcast
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: hazelcast

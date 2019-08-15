@@ -1,0 +1,46 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  reportgenerator:
+    image: mojix/riot-core-bridges:v6.45.0
+    environment:
+      # JAVA_OPTS: "-agentpath:/app/jprofiler/bin/linux-x64/libjprofilerti.so=nowait"
+      VIZIX_BRIDGE_TYPE: reportgenerator
+      VIZIX_KAFKA_SERVERS: kafka:9092
+      VIZIX_REPORT_GENERATOR_PRODUCT_THINGTYPE_FQN: /<TENANT>/PRODUCT
+      VIZIX_REPORT_GENERATOR_PRODUCT_DB_COLLECTION: productcube
+      VIZIX_REPORT_GENERATOR_EPCISEVENT_THINGTYPE_FQN: /<TENANT>/EPCISEVENT
+      VIZIX_REPORT_GENERATOR_EPCISEVENT_DB_COLLECTION: epciseventcube
+      VIZIX_REPORT_GENERATOR_CONTENT_THINGTYPE_FQN: /<TENANT>/CONTENT
+      VIZIX_REPORT_GENERATOR_REFERENCE_LIST_THINGTYPE_FQN: /<TENANT>/REFERENCELIST
+      VIZIX_REPORT_GENERATOR_REFERENCE_LIST_DB_COLLECTION: referencelistcube
+      VIZIX_REPORT_GENERATOR_CATEGORY_THINGTYPE_FQN: /<TENANT>/DEPARTMENTZONEMAPPING
+      VIZIX_REPORT_GENERATOR_CATEGORY_DB_COLLECTION: categorycube
+      VIZIX_REPORT_GENERATOR_STATUS_DB_COLLECTION: statuscube
+      VIZIX_REPORT_GENERATOR_STATUS_THINGTYPE_FQN: /<TENANT>/ITEM,/<TENANT>/ITEMFINALSTATUS
+      VIZIX_REPORT_GENERATOR_LOCATION_THINGTYPE_FQN: /<TENANT>/LOCATION
+      VIZIX_REPORT_GENERATOR_LOCATION_DB_COLLECTION: locationcube
+      VIZIX_REPORT_GENERATOR_FIXTURE_THINGTYPE_FQN: /<TENANT>/FIXTURE
+      VIZIX_REPORT_GENERATOR_FIXTURE_DB_COLLECTION: fixturecube
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ###
+      resources:
+        limits:
+          memory: 2g
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ###
+        tag: reportgenerator

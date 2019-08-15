@@ -1,0 +1,27 @@
+version: "2.3"
+services:
+
+  vizix-tools:
+    image: ${VIZIXTOOLS}
+    command: configure
+    environment:
+
+    #Kafka Enabled
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}
+      VIZIX_KAFKA_ZOOKEEPER: ${ZOOKEEPER_ADDRESS}
+      VIZIX_KAFKA_CREATE_TOPICS: "true"
+      VIZIX_KAFKA_DATA_PARTITIONS: 24
+      VIZIX_KAFKA_DATA_RETENTION_UPDATER: "true"
+      VIZIX_KAFKA_DATA_RETENTION_BYTES: 1073741824
+      VIZIX_KAFKA_DATA_RETENTION_HOURS: 2
+      VIZIX_KAFKA_DATA_REPLICA_FACTOR: 1
+      VIZIX_SITE_CONFIG: "true"
+      VIZIX_EDGE_CONFIG: "true"
+      VIZIX_KAFKA_LOAD_CACHE_GROUP_FQN: "/"
+      #VIZIX_KAFKA_DESCRIBE_TOPICS: "false" Summary Logs
+
+    #SERVICES Connection
+      VIZIX_API_PORT: 80
+      VIZIX_API_HOST: #cloud.kafka.url
+      VIZIX_API_KEY: 7B4BCCDC
+      VIZIX_API_PATH: /riot-core-services

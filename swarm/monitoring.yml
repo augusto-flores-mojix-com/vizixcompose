@@ -1,0 +1,47 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  kafka_exporter:
+    image: danielqsj/kafka-exporter:v1.0.1
+    command: --kafka.server=kafka:9092 --group.filter=.*data.* --topic.filter=.*data.*
+    networks:
+      - iot
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+      resources:
+        reservations:
+          cpus: '0.2'
+          memory: 150M
+        limits:
+          cpus: '0.3'
+          memory: 400M
+
+  dd:
+    image: datadog/agent:6.5.0
+    networks:
+      - iot
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /data:/data:ro
+      - /data/dd:/conf.d/
+    environment:
+      DD_API_KEY: a2f3b8b76d3c21d5d6fb9a2591820687
+      SD_BACKEND: docker
+      DD_HOSTNAME:  #site.url
+      TAGS:  #production/staging
+      #DD_LOGS_ENABLED: "true"
+      #DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
+      #DD_CHECK_RUNNERS: 100 Add this value when multiple TCP_Checks are running
+    deploy:
+      mode: global

@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    mojix.service: mysql
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    mojix.service: mysql
+  strategy:
+    resources: {}
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: mysql
+    spec:
+      containers:
+      - args:
+        - --max_allowed_packet=1024M
+        - --max_connections=7000
+        - --interactive_timeout=3600
+        - --wait_timeout=3600
+        - --lower_case_table_names=0
+        - --net_write_timeout=3600
+        - --net_read_timeout=3600
+        - --innodb_lock_wait_timeout=600
+        - --skip-name-resolve
+        - --innodb_thread_sleep_delay=60000000
+        - --default-authentication-plugin=mysql_native_password
+        - --character-set-server=utf8
+        - --collation-server=utf8_unicode_ci
+        env:
+        - name: MYSQL_DATABASE
+          value: riot_main
+        - name: MYSQL_ROOT_PASSWORD
+          value: control123!
+        image: mysql:8
+        name: mysql
+        ports:
+        - containerPort: 3306
+        resources: {}
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: mysql-claim0
+      hostname: mysql
+      restartPolicy: Always
+      volumes:
+      - name: mysql-claim0
+        persistentVolumeClaim:
+          claimName: mysql-claim0
+  triggers:
+    - type: ConfigChange

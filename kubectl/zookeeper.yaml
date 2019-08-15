@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    mojix.service: zookeeper
+  name: zookeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: zookeeper
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: zookeeper
+    spec:
+      containers:
+      - image: zookeeper:3.4.12
+        name: zookeeper
+        ports:
+        - containerPort: 2181
+        resources: {}
+        volumeMounts:
+        - mountPath: "/datalog"
+          name: zookeeper-disk-datalog
+        - mountPath: "/data"
+          name: zookeeper-disk-data
+      volumes:
+      - name: zookeeper-disk-datalog
+        persistentVolumeClaim:
+          claimName: zookeeper-disk-datalog
+      - name: zookeeper-disk-data
+        persistentVolumeClaim:
+          claimName: zookeeper-disk-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: zookeeper
+  name: zookeeper
+spec:
+  ports:
+  - name: "2181"
+    port: 2181
+    targetPort: 2181
+  selector:
+    mojix.service: zookeeper
+status:
+  loadBalancer: {}

@@ -1,0 +1,6 @@
+init_config:
+
+instances:
+      -   server: mongodb://datadog:<PASSWORD>@<IP>:27017
+          tags:
+              - <customer>.vizixcloud.com

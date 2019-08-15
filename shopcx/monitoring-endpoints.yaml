@@ -1,0 +1,54 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  alerting-api:
+    image: mojix/alerting-api:v6.45.0
+    networks:
+      - iot
+    environment:           
+      digital_plateform_port: '8080'
+      configuration.api.host: 'reverse-proxy-devices'
+      es_http_port: 9200
+      amqp_ssl_port: 5671
+      configuration.api.port: '8081'
+      configuration.api.war.name : 'statemachine-api-configuration'
+      metrics.elasticsearch.host : 'shopcx-elasticsearch-monitoring'
+      JAVA_OPTS: '-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1  -XshowSettings:vm'
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ###
+        tag: alerting-api
+
+  monitoring-api:
+    image: monitoring-api:v6.45.0
+    environment:
+        configuration.api.host: 'internaltransformer'
+        configuration.api.war.name : '/statemachine-api-configuration'
+        metrics.elasticsearch.host : 'shopcx-elasticsearch-monitoring'
+        location.api.host : 'internaltransformer'
+        location.api.war.name : 'statemachine-api-configuration'
+        JAVA_OPTS: '-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1  -XshowSettings:vm'
+    networks:
+      - iot
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ###
+        tag: monitoring-api
+        

@@ -1,0 +1,102 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  kafka1:
+    image: mojix/kafka:v2.1.0
+    environment:
+      KAFKA_MAX_MEMORY: 2g
+      KAFKA_MIN_MEMORY: 1g
+      KAFKA_PARAM_BROKER_ID: 1
+      KAFKA_PARAM_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_PARAM_LISTENERS: PLAINTEXT://:9092
+      KAFKA_PARAM_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9092
+      KAFKA_PARAM_OFFSETS_RETENTION_MINUTES: '10080'
+      KAFKA_PARAM_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_PARAM_LOG_RETENTION_HOURS: 12
+      KAFKA_PARAM_LOG_RETENTION_BYTES: 1073741824
+    volumes:
+      - /data/kafka1:/data
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##LABEL
+      resources:
+        limits:
+          memory: 3g
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp://##PAPERTRAIL_LINK
+        tag: kafka3
+
+
+  kafka2:
+    image: mojix/kafka:v2.1.0
+    environment:
+      KAFKA_MAX_MEMORY: 2g
+      KAFKA_MIN_MEMORY: 1g
+      KAFKA_PARAM_BROKER_ID: 2
+      KAFKA_PARAM_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_PARAM_LISTENERS: PLAINTEXT://:9092
+      KAFKA_PARAM_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9092
+      KAFKA_PARAM_OFFSETS_RETENTION_MINUTES: '10080'
+      KAFKA_PARAM_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_PARAM_LOG_RETENTION_HOURS: 12
+      KAFKA_PARAM_LOG_RETENTION_BYTES: 1073741824
+    volumes:
+      - /data/kafka2:/data
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##LABEL
+      resources:
+        limits:
+          memory: 3g
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: kafka3
+
+        
+  kafka3:
+    image: mojix/kafka:v2.1.0
+    environment:
+      KAFKA_MAX_MEMORY: 2g
+      KAFKA_MIN_MEMORY: 1g
+      KAFKA_PARAM_BROKER_ID: 3
+      KAFKA_PARAM_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_PARAM_LISTENERS: PLAINTEXT://:9092
+      KAFKA_PARAM_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9092
+      KAFKA_PARAM_OFFSETS_RETENTION_MINUTES: '10080'
+      KAFKA_PARAM_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_PARAM_LOG_RETENTION_HOURS: 12
+      KAFKA_PARAM_LOG_RETENTION_BYTES: 1073741824
+    volumes:
+      - /data/kafka3:/data
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##LABEL
+      resources:
+        limits:
+          memory: 3g
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: kafka3

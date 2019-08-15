@@ -1,0 +1,21 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  reverse-proxy-devices:
+    image: mojix/reverse-proxy-devices:internal-caddy
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##node
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ## papertrail
+        tag: reverse-proxy-devices

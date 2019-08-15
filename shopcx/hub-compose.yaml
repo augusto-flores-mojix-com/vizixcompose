@@ -1,0 +1,127 @@
+version: '2.2'
+
+services:
+
+    cxi-hub-rabbitmq:
+        container_name: cxi-hub-rabbitmq
+        image: "docker-pull.factory.shopcx.io/hub/rabbitmq:1.1"
+        hostname: rabbitHost
+        environment:
+            - hub_hostname=hub2
+            - digital_plateform_host=172.16.103.4
+            - digital_plateform_user=tester
+            - digital_plateform_pass=testislife
+            - amqp_server_user=whiterabbit
+            - amqp_server_pass=rabbit
+            - amqp_local_user=whiterabbit
+            - amqp_local_pass=rabbit
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        volumes:
+            - /data/hub/rabbitmq/storage:/var/lib/rabbitmq
+        healthcheck:
+            test: ["CMD", "./healthcheck.sh"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+        restart: unless-stopped
+
+
+    cxi-hub-heartbeat:
+        container_name: cxi-hub-heartbeat
+        image: "docker-pull.factory.shopcx.io/hub/heartbeat:1.2"
+        environment:
+            - hub_hostname=hub2
+            - digital_plateform_host=172.16.103.4
+            - digital_plateform_user=tester
+            - digital_plateform_pass=testislife
+            - amqp_server_user=whiterabbit
+            - amqp_server_pass=rabbit
+            - amqp_server_host=cxi-hub-rabbitmq
+            - amqp_server_port=15672
+            - amqp_local_user=whiterabbit
+            - amqp_local_pass=rabbit
+            - tomcat_admin_user=tomcat
+            - tomcat_admin_pass=testislife
+            - es_http_port=9200
+            - hub_apl_server_host=cxi-hub
+            - hub_apl_server_port=8081
+            - hub_hal_server_host=cxi-hub
+            - hub_hal_server_port=8081
+            - hub_hal_administration_server_host=cxi-hub
+            - hub_hal_administration_server_port=8081
+            - hub_printing_server_host=cxi-hub
+            - hub_printing_server_port=8081
+        volumes:
+            - /data/hub/heartbeat/conf:/usr/share/heartbeat/conf:ro
+        restart: unless-stopped
+
+
+    cxi-hub-metricbeat:
+        container_name: cxi-hub-metricbeat
+        image: "docker-pull.factory.shopcx.io/hub/metricbeat:1.1"
+        environment:
+            - hub_hostname=hub2
+            - digital_plateform_host=172.16.103.4
+            - digital_plateform_user=tester
+            - digital_plateform_pass=testislife
+            - es_http_port=9200
+        restart: unless-stopped
+
+
+    cxi-hub-packetbeat:
+        container_name: cxi-hub-packetbeat
+        image: "docker-pull.factory.shopcx.io/hub/packetbeat:1.1"
+        environment:
+            - hub_hostname=hub2
+            - digital_plateform_host=172.16.103.4
+            - digital_plateform_user=tester
+            - digital_plateform_pass=testislife
+            - es_http_port=9200
+        cap_add:
+          - NET_ADMIN
+        restart: unless-stopped
+
+
+    cxi-hub-logstash:
+        container_name: cxi-hub-logstash
+        image: "docker-pull.factory.shopcx.io/hub/logstash:1.1"
+        environment:
+            - digital_plateform_host=172.16.103.4
+            - digital_plateform_user=tester
+            - digital_plateform_pass=testislife
+            - es_http_port=9200
+        volumes:
+            - /data/hub/tomcat/logs:/var/log/tomcat8:ro
+        restart: unless-stopped
+
+
+    cxi-hub:
+        container_name: cxi-hub
+        image: "docker-pull.factory.shopcx.io/hub/hub:1.4.2"
+        environment:
+            - hub_hostname=hub2
+            - digital_plateform_host=172.16.103.4
+            - digital_plateform_user=tester
+            - digital_plateform_pass=testislife
+            - amqp_server_user=whiterabbit
+            - amqp_server_pass=rabbit
+            - amqp_local_user=whiterabbit
+            - amqp_local_pass=rabbit
+            - tomcat_admin_user=tomcat
+            - tomcat_admin_pass=testislife
+        ports:
+            - "8081:8081"
+        volumes:
+            - /data/hub/tomcat/conf_replay:/usr/local/tomcat/tagsys_replay:ro
+            - /data/hub/tomcat/logs:/usr/local/tomcat/logs
+            - /data/hub/tomcat/www:/usr/local/tomcat/www
+            - /data/hub/tomcat/tagsys:/usr/local/tomcat/tagsys
+            - /data/hub/heartbeat/conf:/usr/share/heartbeat/conf
+        depends_on:
+            cxi-hub-rabbitmq:
+                condition: service_healthy
+        network_mode: host
+        restart: unless-stopped
+        

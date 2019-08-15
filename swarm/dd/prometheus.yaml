@@ -1,0 +1,61 @@
+init_config:
+  # Leave empty
+
+instances:
+
+  - prometheus_url: http://rulesprocessor:8000/metrics
+    namespace: "rulesprocessor"
+    metrics:
+      - vizix_thing_cache_hit_rate: thing.cache.hit.rate
+      - vizix_kafka_offset: kafka.offset
+      - vizix_kafka_age: kafka.age
+      - vizix_kafka_lag: kafka.lag
+      - vizix_uptime: uptime
+      - vizix_thing_cache_load_count: thing.cache.load.count
+      - vizix_thing_cache_size: thing.cache.size
+      - vizix_thing_cache_size_mb: thing.cache.size.mb
+      - vizix_metrics_size: metrics.size
+      - vizix_zdf_total_things_count: zdf.total.things.count
+      - vizix_publishers_count: publishers.count
+      - vizix_zdf_data_count: zdf.data.count
+      - vizix_zdf_data_mb: zdf.data.mb
+      - vizix_zdf_things_mb: zdf.things.mb
+
+  - prometheus_url: http://mongoinjector:8000/metrics
+    namespace: "mongoinjector"
+    metrics:
+      - vizix_kafka_offset: kafka.offset
+      - vizix_kafka_age: kafka.age
+      - vizix_kafka_lag: kafka.lag
+      - vizix_metrics_size: metrics.size
+      - vizix_uptime: uptime
+      - vizix_publishers_count: publishers.count
+
+  - prometheus_url: http://transformbridge:8000/metrics
+    namespace: "transformbridge"
+    metrics:
+      - vizix_kafka_offset: kafka.offset
+      - vizix_kafka_age: kafka.age
+      - vizix_kafka_lag: kafka.lag
+      - vizix_uptime: uptime
+
+  - prometheus_url: http://actionprocessor:8000/metrics
+    namespace: "actionprocessor"
+    metrics:
+      - vizix_kafka_offset: kafka.offset
+      - vizix_kafka_age: kafka.age
+      - vizix_kafka_lag: kafka.lag
+      - vizix_uptime: uptime
+
+  - prometheus_url: http://kafka_exporter:9308/metrics
+    namespace: "kafka"
+    metrics:
+      - kafka_consumergroup_current_offset: consumergroup.current.offset
+      - kafka_consumergroup_lag: consumergroup.lag
+      - kafka_topic_partition_current_offset: topic.partition.current.offset
+  
+  - prometheus_url: http://<private-ip-swarm-manager>:4999
+    namespace: "swarm"
+    metrics:
+      - swarm_manager_tasks_total: task.status
+      - swarm_manager_nodes: nodes.status

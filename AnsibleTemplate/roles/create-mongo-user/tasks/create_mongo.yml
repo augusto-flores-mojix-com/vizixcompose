@@ -1,0 +1,4 @@
+- name: Create AuthUser
+  command: docker exec {{mongo_container_name}} mongo admin --eval "db.createUser({user:'{{mongo_user}}', pwd:'{{mongo_password}}',roles:['userAdminAnyDatabase']});"
+- name: Create Role
+  command: docker exec {{mongo_container_name}} mongo admin -u "{{mongo_user}}" -p "{{mongo_password}}" --authenticationDatabase admin --eval "db.createRole({role:'executeFunctions',privileges:[{resource:{anyResource:true},actions:['anyAction']}],roles:[]});db.grantRolesToUser('{{mongo_user}}',[{ role:'executeFunctions', db:'admin' },{ role:'readWrite', db:'{{mongo_database}}' }]);"

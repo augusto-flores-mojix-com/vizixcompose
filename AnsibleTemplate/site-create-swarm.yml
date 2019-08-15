@@ -1,0 +1,16 @@
+- hosts: docker-manager-first
+  roles:
+    - { role: create-docker-swarm }
+  become: yes
+- hosts: docker-managers
+  roles:
+    - { role: join-swarm-manager }
+  become: yes
+- hosts: docker-workers
+  roles:
+    - { role: join-swarm-worker }
+  become: yes
+- hosts: docker-manager-first
+  roles:
+    - { role: set-swarm-labels }
+  become: yes

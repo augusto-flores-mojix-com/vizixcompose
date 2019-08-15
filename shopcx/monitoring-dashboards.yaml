@@ -1,0 +1,47 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  statemachine-api-dashboard-monitoring:
+    image: mojix/statemachine-api-dashboard-monitoring:v6.45.0
+    ports:
+        - 9005:9001
+    environment:          
+        - DEV_CONFIGURATION_API_URL=https:// ## .vizix.io/ # remove it in production as it's behind a reverse proxy
+        - KIBANA_SERVER_URL=https:// ## .qa.vizix.io/ # should be define even in production environment, kibana server normally is located on monitoring server
+        - MONITORING_API_URL=https:// ## .vizix.io/  # remove it in production as it's behind a reverse proxy
+        - MULTI_TENANT_ENABLED=true ## true|false # should be defined to add tenant url query for kibana, by default is true, it should explicitly be false in order to disable multi tenant
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ###
+        tag: statemachine-dashboard-monitoring
+
+  merchandising-dashboard:
+    image: mojix/merchandising-dashboard:v6.45.0
+    environment:
+        - DEV_CONFIGURATION_LOCATION_API_URL=http://internaltransformer:8080
+        - DEV_MONITORING_API_URL=http://monitoring-api:8080
+        - DEV_MONITORING_DASHBOARD_URL=https:// ## .vizix.io/merchandising-dashboard
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: http:// ### 
+        tag: merchandising-dashboard
+        

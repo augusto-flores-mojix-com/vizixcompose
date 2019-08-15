@@ -1,0 +1,21 @@
+##########################################
+#                                        #
+#        Analytics Caddyfile             #
+#                                        #
+##########################################
+
+#For kubernetes config map, execute: kubectl create configmap caddyfile-analytics-configmap --from-file=caddyfile-analytics
+
+
+:80 {
+  gzip
+  tls off
+  log / stdout "{remote} - {user} [{when}] \"{method} {uri} {proto}\" {status} {size} {latency}"
+  errors stderr
+  timeouts 2h
+
+  proxy / analytics:3000 {
+    policy round_robin
+    transparent
+  }
+}

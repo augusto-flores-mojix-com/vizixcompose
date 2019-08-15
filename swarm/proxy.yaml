@@ -1,0 +1,44 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+configs:
+  Caddyfile:
+    file: ./Caddyfile
+
+services:
+
+  proxy:
+    image: mojix/proxy:0.10.11
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+    configs:
+      - source: Caddyfile
+        target: /etc/Caddyfile
+
+    command: --conf /etc/Caddyfile -http2=false
+    volumes:
+      - /data/caddy:/root/.caddy
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ## HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: proxy

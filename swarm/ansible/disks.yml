@@ -1,0 +1,18 @@
+---
+- hosts: all
+  remote_user: vizix
+  become: true
+  gather_facts: false
+  pre_tasks:
+    - raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+      register: output
+      changed_when: output.stdout != ""
+    - setup:
+  tasks:
+    - raw: mkfs.xfs /dev/sdc
+    - raw: mkdir -p /data
+    - raw: echo "/dev/sdc /data xfs defaults 0 0" >> /etc/fstab
+    - raw: echo "cgroup  /sys/fs/cgroup  cgroup  defaults  0   0" >> /etc/fstab
+    - raw: mount /sys/fs/cgroup
+    - raw: mount -a
+    - raw: mkdir -p /data/zookeeper/data /data/zookeeper/datalog /data/mysql /data/mongo /data/kafka /data/endorsed /data/rulesprocessor-data /data/mongoinjector-data /data/transformbridge-data /data/k2m-data /data/prometheus /data/grafana

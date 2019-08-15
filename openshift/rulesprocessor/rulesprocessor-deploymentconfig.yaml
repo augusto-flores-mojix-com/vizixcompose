@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: DeploymentConfig
+metadata:
+  creationTimestamp: null
+  labels:
+    mojix.service: rulesprocessor
+  name: rulesprocessor
+spec:
+  replicas: 1
+  selector:
+    mojix.service: rulesprocessor
+  strategy:
+    resources: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: rulesprocessor
+    spec:
+      containers:
+      - env:
+        - name: MEM_XMS
+          value: 2g
+        - name: MEM_XMX
+          value: 4g
+        - name: VIZIX_BRIDGE_TYPE
+          value: rulesprocessor
+        - name: VIZIX_ESPER
+          value: "no"
+        - name: VIZIX_KAFKA_CACHE_TICKLE_MODE
+          value: MONGO_INJECTOR
+        - name: VIZIX_KAFKA_CODE
+          value: RulesProcessor
+        - name: VIZIX_KAFKA_SERVERS
+          value: kafka:9092
+        - name: VIZIX_LOG_LEVEL
+          value: INFO
+        image: mojix/riot-core-bridges
+        name: rulesprocessor
+        resources:
+          requests:
+            memory: 2Gi
+          limits:
+            memory: 4Gi
+      hostname: rulesprocessor
+      restartPolicy: Always
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - rulesprocessor
+        from:
+          kind: ImageStreamTag
+          name: riot-core-bridges:latest
+      type: ImageChange

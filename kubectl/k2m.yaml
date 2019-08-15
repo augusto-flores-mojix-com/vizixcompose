@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k2m
+  labels:
+    mojix.service: k2m
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: k2m
+#    matchLabels:
+#      app: ui
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: k2m
+    spec:
+      containers:
+      - name: k2m
+        resources:
+          limits:
+            memory: 4Gi
+        image: mojix/riot-core-bridges:v6.37.0
+#        ports:
+#       - containerPort: 80
+        env:
+          - name: VIZIX_MQTTHOST
+            value: "mqtt"
+          - name: VIZIX_BRIDGE_TYPE
+            value: "k2mbridge"
+          - name: VIZIX_KAFKA_SERVERS
+            value: "kafka1:9092,kafka2:9092,kafka3:9092"
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: m2k
+      restartPolicy: Always

@@ -1,0 +1,14 @@
+- name: Downloading BackUp file
+  get_url:
+    url: "{{ mysql_backup_fileurl }}"
+    dest: /tmp/{{mysql_file_name}}
+- name: Decompress "{{mysql_file_name}}"
+  command: gzip -d /tmp/"{{mysql_file_name}}"
+- name: Copy file to docker container
+  command: docker cp /tmp/"{{mysql_sql_file}}" "{{mysql_container_name}}":/tmp/
+- name: Restore Data to MySQL
+  command: docker exec {{mysql_container_name}} sh -c 'mysql -u {{mysql_user}} -p{{mysql_password}} < /tmp/{{mysql_sql_file}}'
+- name: Clean Up Files ("{{mysql_container_name}}")
+  command: docker exec "{{mysql_container_name}}" rm /tmp/{{mysql_sql_file}}
+- name: Clean Up Files ("Server")
+  command: rm /tmp/{{mysql_sql_file}}

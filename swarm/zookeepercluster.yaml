@@ -1,0 +1,89 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  zookeeper1:
+    image: zookeeper:3.4.12
+    hostname: zookeeper1
+    ports:
+      - target: 2181
+        published: 2181
+        protocol: tcp
+        mode: host
+    networks:
+      - iot
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zookeeper2:2888:3888 server.3=zookeeper3:2888:3888
+    volumes:
+      - /data/zookeeper1/data:/data
+      - /data/zookeeper1/datalog:/datalog
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: zookeeper1
+
+  zookeeper2:
+    image: zookeeper:3.4.12
+    hostname: zookeeper2
+    ports:
+      - target: 2181
+        published: 2182
+        protocol: tcp
+        mode: host
+    networks:
+      - iot
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zookeeper1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zookeeper3:2888:3888
+    volumes:
+      - /data/zookeeper2/data:/data
+      - /data/zookeeper2/datalog:/datalog
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: zookeeper
+
+  zookeeper3:
+    image: zookeeper:3.4.12
+    hostname: zookeeper3
+    ports:
+      - target: 2181
+        published: 2183
+        protocol: tcp
+        mode: host
+    networks:
+      - iot
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 server.3=0.0.0.0:2888:3888
+    volumes:
+      - /data/zookeeper3/data:/data
+      - /data/zookeeper3/datalog:/datalog
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+  #  logging:
+  #    driver: syslog
+  #    options:
+  #      syslog-address: udp:// ##PAPERTRAIL_LINK
+  #      tag: zookeeper3

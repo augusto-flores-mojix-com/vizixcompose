@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transformbridge
+  labels:
+    mojix.service: transformbridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: transformbridge
+#    matchLabels:
+#      app: ui
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: transformbridge
+    spec:
+      containers:
+      - name: transformbridge
+        resources:
+          limits:
+            memory: 3Gi
+        image: mojix/riot-core-bridges:v6.37.0
+#        ports:
+#       - containerPort: 80
+        env:
+          - name: VIZIX_BRIDGE_TYPE
+            value: "transformbridge"
+          - name: VIZIX_KAFKA_SERVERS
+            value: "kafka1:9092,kafka2:9092,kafka3:9092"
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: transformbridge
+      restartPolicy: Always

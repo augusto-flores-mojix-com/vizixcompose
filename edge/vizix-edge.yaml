@@ -1,0 +1,189 @@
+version: "2.3"
+services:
+  kedge:
+    image: mojix/kafka:v2.2.1
+    container_name: kedge
+    hostname: kedge
+    restart: always
+    environment:
+      KAFKA_MAX_MEMORY: 2g
+      KAFKA_MIN_MEMORY: 1g
+      KAFKA_PARAM_BROKER_ID: 1
+      KAFKA_PARAM_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_PARAM_LISTENERS: PLAINTEXT://:9092
+      KAFKA_PARAM_ADVERTISED_LISTENERS: PLAINTEXT://kedge:9092
+      KAFKA_PARAM_OFFSETS_RETENTION_MINUTES: '10080'
+      KAFKA_PARAM_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_PARAM_LOG_RETENTION_HOURS: 12
+      KAFKA_PARAM_LOG_RETENTION_BYTES: 1073741824
+    depends_on:
+      - zookeeper
+    volumes:
+      - ./data/kafka:/data
+    ports:
+      - 9092:9092
+    logging:
+      options:
+        max-size: 1g
+
+  zookeeper:
+    image: zookeeper:3.4.12
+    container_name: zookeeper
+    hostname: zookeeper
+    restart: always
+    ports:
+      - 2181:2181
+    volumes:
+      - ./data/zookeeper/data:/data
+      - ./data/zookeeper/datalog:/datalog
+    logging:
+      options:
+        max-size: 1g
+
+  edge-tools-on-prem:
+    image: mojix/edge-tools-on-prem:v1.0.0
+    container_name: edge-tools-on-prem
+    hostname: edge-tools-on-prem
+    restart: "no"
+    environment:
+      VIZIX_EDGE_ZOOKEEPER_ADDRESS: "zookeeper:2181"
+      VIZIX_TENANT_CODE: ${VIZIX_TENANT_CODE}
+      VIZIX_PREMISE_CODE: ${VIZIX_PREMISE_CODE}
+    
+  mmbridge:
+    image: mojix/riot-core-bridges:v6.52.1
+    container_name: mmbridge
+    hostname: mmbridge
+    extra_hosts:
+      - "kafka:${VIZIX_CLOUD_KAFKA_SERVER_IP}"
+    environment:
+      VIZIX_BRIDGE_TYPE: mmbridge
+      VIZIX_MMBRIDGE_CONSUMER_SERVER: kedge:9092
+      VIZIX_MMBRIDGE_CONSUMER_TOPIC: ___v1___cc___response___${VIZIX_TENANT_CODE}___${VIZIX_PREMISE_CODE}
+      VIZIX_MMBRIDGE_PRODUCER_SERVER: ${VIZIX_CLOUD_KAFKA_BOOTSTRAP_SERVER}
+      VIZIX_MMBRIDGE_PRODUCER_TOPIC: ___v1___cc___response___${VIZIX_TENANT_CODE}___${VIZIX_PREMISE_CODE}
+
+  vizix-tools:
+    image: mojix/vizix-tools:edge
+    command: configure
+    environment:
+
+      #Installation Variables
+      VIZIX_SYSCONFIG: "false"
+      VIZIX_SYSCONFIG_OPTION: platform-core-root
+      VIZIX_SYSCONFIG_TENANT_CODE: MOJ
+      VIZIX_SYSCONFIG_TENANT_NAME: MojixInc
+      VIZIX_SYSCONFIG_CREATE_TENANT: "false"
+      #Set to false when SysConfig is incremental
+      VIZIX_SYSCONFIG_CLEAN: "false"
+
+      #Kafka Enabled
+      VIZIX_KAFKA_SERVERS: kedge:9092
+      VIZIX_KAFKA_ZOOKEEPER: zookeeper:2181
+      VIZIX_KAFKA_CREATE_TOPICS: "true"
+      VIZIX_KAFKA_LOAD_CACHE: "false"
+      VIZIX_KAFKA_DATA_PARTITIONS: 24
+      VIZIX_KAFKA_DATA_RETENTION_UPDATER: "true"
+      VIZIX_KAFKA_DATA_RETENTION_BYTES: 1073741824
+      VIZIX_KAFKA_DATA_RETENTION_HOURS: 2
+      VIZIX_KAFKA_DATA_REPLICA_FACTOR: 1
+      VIZIX_SITE_CONFIG: "false"
+      #VIZIX_KAFKA_DESCRIBE_TOPICS: "false" Summary Logs
+      VIZIX_EDGE_CONFIG: "true"
+
+  hbridge:
+    image: mojix/riot-core-bridges:v6.52.1
+    container_name: httpbridge
+    ports:
+      - 8081:8080
+    environment:
+      VIZIX_BRIDGE_TYPE: httpbridge
+      VIZIX_KAFKA_SERVERS: kedge:9092
+      #VIZIX_KAFKA_CODE: /CHANNEL/HTTPBRIDGE
+
+  transformbridge:
+    hostname: transformbridge
+    container_name: transformbridge
+    image: mojix/riot-core-bridges:v6.52.1
+    restart: always
+    environment:
+      VIZIX_BRIDGE_TYPE: transformbridge
+      VIZIX_KAFKA_SERVERS: kedge:9092
+      VIZIX_KAFKA_CODE: /${VIZIX_TENANT_CODE}/${VIZIX_PREMISE_CODE}/TRANSFORMBRIDGE
+      VIZIX_LOG_LEVEL: INFO
+      VIZIX_BRIDGE_MODE: 'EDGE'
+
+  mm-c2f:
+    image: mojix/kafka:v2.2.1-mm
+    container_name: mm-c2f
+    hostname: mm-c2f
+    extra_hosts:
+      - "kafka:${VIZIX_CLOUD_KAFKA_SERVER_IP}"
+    restart: always
+    environment:
+      KAFKA_MM_WHITE_LIST: "___v1___cache.*|___v1___cc___request___.*|___v1___ss___${VIZIX_TENANT_CODE}___${VIZIX_PREMISE_CODE}___epcisMap|___v1___ss___${VIZIX_TENANT_CODE}___${VIZIX_PREMISE_CODE}___inventory"
+      KAFKA_MM_CONSUMER_GROUPID: mm-c2f-${VIZIX_TENANT_CODE}-${VIZIX_PREMISE_CODE}-01
+      KAFKA_MM_CONSUMER_READ_FROM: earliest
+      KAFKA_MM_CONSUMER_SERVER: ${VIZIX_CLOUD_KAFKA_BOOTSTRAP_SERVER}
+      KAFKA_MM_PRODUCER_SERVER: kedge:9092
+      KAFKA_MM_MESSAGE_HANDLER: com.tierconnect.riot.bridges.msghandlers.TopicMappingMessageHandler
+      KAFKA_MM_MESSAGE_HANDLER_ARGS: "___v1___ss___${VIZIX_TENANT_CODE}___${VIZIX_PREMISE_CODE}___epcisMap,___v1___ss___epcisMap;___v1___ss___${VIZIX_TENANT_CODE}___${VIZIX_PREMISE_CODE}___inventory,___v1___ss___inventory"
+
+  rulesprocessor:
+    hostname: rulesprocessor
+    container_name: rulesprocessor
+    image: mojix/riot-core-bridges:v6.52.1
+    restart: always
+    environment:
+      #JAVA_OPTS: "-agentpath:/app/jprofiler/bin/linux-x64/libjprofilerti.so=nowait"
+      MEM_XMS: 2g
+      MEM_XMX: 4g
+      VIZIX_ESPER: 'no'
+      VIZIX_BRIDGE_TYPE: rulesprocessor
+      VIZIX_KAFKA_SERVERS: kedge:9092
+      VIZIX_KAFKA_CODE: /${VIZIX_TENANT_CODE}/${VIZIX_PREMISE_CODE}/RULESPROCESSOR
+      VIZIX_LOG_LEVEL: 'INFO'
+      VIZIX_KAFKA_CACHE_TICKLE_MODE: 'MONGO_INJECTOR'
+      #VIZIX_STREAM_APP_LOWMEM_MINIMUM_GC_WAIT: ## defaults 30 seconds.
+      #VIZIX_CRITICAL_MEMORY_THRESHOLD: ## default 200 MB  (cleans up all memory when 200MB is free for the container)
+      #VIZIX_WARNING_MEMORY_THRESHOLD: ## defaults 600 MB (cleans up some memory when 600MB is free for the container)
+      #VIZIX_THING_CACHE_SIZE_MB: ## 2048 amount of memory reserved for GC
+      #VIZIX_THING_CACHE_EVICTION_TIME: 30240 In MINUTES forced eviction after 3 weeks of no use
+      VIZIX_BRIDGE_MODE: 'EDGE'
+
+  actionprocessor:
+    hostname: actionprocessor
+    container_name: actionprocessor
+    image: mojix/riot-core-bridges:v6.53.2
+    restart: always
+    environment:
+      VIZIX_BRIDGE_TYPE: actionprocessor
+      VIZIX_KAFKA_SERVERS: kedge:9092
+      VIZIX_KAFKA_CODE: /${VIZIX_TENANT_CODE}/${VIZIX_PREMISE_CODE}/ACTIONPROCESSOR
+      VIZIX_LOG_LEVEL: 'INFO'
+      #VIZIX_BRIDGE_MODE: 'CLOUD'
+
+  connect:
+    hostname: connect
+    container_name: connect
+    image: mojix/kafka-ws-connector:v6.52.1
+    restart: always
+    ports:
+      - 7083:8083
+    depends_on:
+      - kedge
+    environment:
+      VIZIX_KAFKA_SERVERS: kedge:9092
+      VIZIX_GROUP_ID: 1
+      LOGGING_LEVEL: INFO
+      LOGGING_LEVEL_WS_CONNECTOR: INFO
+
+  kafkaproxyclient:
+    hostname: kafkaproxyclient
+    container_name: kafkaproxyclient
+    image: mojix/riot-core-bridges:v6.52.1
+    restart: always
+    environment:
+      VIZIX_BRIDGE_TYPE: kafkaproxyclient
+      VIZIX_KAFKA_SERVERS: ${VIZIX_CLOUD_KAFKA_BOOTSTRAP_SERVER}
+      VIZIX_TENANT_CODE: ___${VIZIX_TENANT_CODE}___${VIZIX_PREMISE_CODE}

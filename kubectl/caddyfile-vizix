@@ -1,0 +1,355 @@
+# Generic Caddyfile server for vizix-compose
+# Serve any request coming from port 80
+# For forced REDIR on port 80
+#For kubernetes config map, execute: kubectl create configmap caddyfile-vizix-configmap --from-file=caddyfile-vizix
+
+:80 {
+  gzip
+  tls off
+  log / stdout "{remote} - {user} [{when}] \"{method} {uri} {proto}\" {status} {size} {latency}"
+  errors stderr
+  timeouts 2h
+
+  proxy / ui:80 {
+    policy round_robin
+    health_check /console/scripts/config.js
+    transparent
+  }
+  
+##########################################
+#                                        #
+#              SERVICES API              #
+#                                        #
+##########################################
+
+  # Before v6.55.0
+#  rewrite /riot-core-services/api/reportExecution {
+#    r (.*)
+#    if {path} not_has updateThing
+#    if {path} not_has createThing
+#    if {path} not_has deleteThingByReport
+#    if {path} not_has thing/bulkUpdate
+#    if {path} not_has thing/massiveBulkProcess
+#    if {path} not_has attachment/download
+#    if {path} not_has attachment/upload
+#    if_op and
+#    to /riot-core-reports/api/reportExecution{1}
+#  }
+
+  # After v6.55.0
+  rewrite /riot-core-services/api/reportExecution {
+    r (.*)
+    if {path} not_has updateThing
+    if {path} not_has createThing
+    if {path} not_has deleteThingByReport
+    if {path} not_has thing/bulkUpdate
+    if {path} not_has thing/massiveBulkProcess
+    if {path} not_has attachment/download
+    if {path} not_has attachment/upload
+    if {path} not_has ThingByReport
+    if {path} not_has actionExecution
+    if {path} not_has kill-massive-process
+    if_op and
+    to /riot-core-reports/api/reportExecution{1}
+  }
+
+  proxy /riot-core-reports/api/reportExecution reports:8080 {
+    policy round_robin
+    transparent
+  }
+
+  proxy /riot-core-services services:8080 {
+    policy round_robin
+    health_check /riot-core-services/api/swagger.json
+    transparent
+  }
+
+##########################################
+#                                        #
+#             MINIO API                  #
+#                                        #
+##########################################
+
+  proxy /vizix-cdn minio:9000 {
+    transparent
+    without /vizix-cdn
+  }
+
+  proxy /minio minio:9000 {
+    transparent
+  }
+
+##########################################
+#                                        #
+# Rewrite and redirect from Mobile PATCH #
+#    To do: improve performance          #
+#                                        #
+##########################################
+
+  rewrite /riot-core-services {
+    if {path} has thingBridge
+    r /api(.*)
+    to /http-bridge{1}
+  }
+
+  proxy /http-bridge hbridge:8080 {
+    policy round_robin
+#    health_check /http-bridge/thingBridge/thing
+    transparent
+#    websocket
+  }
+
+##########################################
+#                                        #
+#   Rules for /CXI Endpoints             #
+#                                        #
+##########################################
+
+  proxy /serialization-api externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /epcis-core externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+
+  proxy /api externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+
+  proxy /notifications https://onesignal.com/api/v1/notifications {
+  without /notifications
+  }
+
+  proxy /static externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /epcis-events-input-rest/rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-api-status-rest/rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-epcis-events-input-rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-api-configuration/rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-api-aggregates/rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /product-recommendation-api/rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /product-api/rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-api-supervision/rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /supply-chain-api/rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /supply_chain/transactions externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /results externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /configurations externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-epcis-events-input-rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /openapi externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /backoffice externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /printing-api/rest externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /printing-dashboard externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+   proxy /statemachine-api-dashboard-configuration externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /configuration-dashboard externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-api-monitoring externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+
+  proxy /merchandising-dashboard externaltransformer:8080 {
+    transparent
+    policy round_robin
+  }
+
+#################################################
+#                                               #
+#   Tag-management/auth, digital-signature      #
+#                                               #
+#################################################
+
+  proxy /tag-management externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+
+  proxy /tag-management-ws externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+
+  proxy /tag-auth-api/rest/encryption/grain128a tag-auth:8080/tag-auth-api/rest/encryption/grain128a {
+    policy round_robin
+    without /tag-auth-api/rest/encryption/grain128a
+    transparent
+  }
+
+  proxy /tagauth externaltransformer:8080/digital-signature {
+    policy round_robin
+    transparent
+  }
+
+  proxy /statemachine-api-tagauth/rest/encryption/key externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+
+  proxy /digital-signature externaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+
+  proxy /supervision externaltransformer:8080/digital-signature {
+    policy round_robin
+    transparent
+  }
+
+  rewrite /eclipse-frontal-association {
+    r (.*)
+    to /digital-signature/pairing/associate{1}
+  }
+
+  ## The following paths are just alias for other systems to digital-signature
+  # refer to https://mojixinc.atlassian.net/browse/RPLAT-1231
+  # To be removed in the near future.
+  proxy /tagsys externaltransformer:8080/digital-signature {
+    policy round_robin
+    without /tagsys
+    transparent
+  }
+
+  proxy /Tagsys externaltransformer:8080/digital-signature {
+    policy round_robin
+    without /Tagsys
+    transparent
+  }
+
+  proxy /digital_platform externaltransformer:8080/digital-signature {
+    policy round_robin
+    without /digital_platform
+    transparent
+  }
+
+##########################################
+#                                        #
+#                Flow                    #
+#                                        #
+##########################################
+
+  redir /flow /flow/
+  proxy /flow flow:1880 {
+    policy round_robin
+    without /flow
+#    health_check /
+    transparent
+    websocket
+  }
+}
+
+
+##########################################
+#                                        #
+#   ALE messages rewrite to HTTPBridge   #
+#                                        #
+##########################################
+
+:9090 {
+  tls off
+  log stdout
+  errors stderr
+  timeouts 2h
+
+  rewrite / {
+    r (.*)
+    to /http-bridge/v1/data/<SPECNAME>/<THINGTYPE>/{1}
+  }
+
+  proxy / <private-ip-httpbridge>:9999 {
+    policy round_robin
+    health_check /http-bridge/thingBridge/thing
+    transparent
+  }
+}
+
+##########################################
+#                                        #
+#          Monitoring ON PREM            #
+#                                        #
+##########################################
+
+#grafana.<client>.vizixcloud.com {
+#    tls {
+#      ask https://acme-staging.api.letsencrypt.org/directory
+#    }
+#    log / stdout "{remote} - {user} [{when}] \"{method} {uri} {proto}\" {status} {size} {latency}"
+#    errors stderr
+#    timeouts 2h
+#
+#    proxy / grafana:3000 {
+#      transparent
+#    }
+#}
+
+#prometheus.<client>.vizixcloud.com {
+#    tls {
+#      ask https://acme-staging.api.letsencrypt.org/directory
+#    }
+#    log / stdout "{remote} - {user} [{when}] \"{method} {uri} {proto}\" {status} {size} {latency}"
+#    errors stderr
+#    timeouts 2h
+#
+#    proxy / prometheus:9090 {
+#      transparent
+#    }
+#}

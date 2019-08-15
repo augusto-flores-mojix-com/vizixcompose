@@ -1,0 +1,25 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  mapreducereprocess:
+    image: gcr.io/mojix-registry/vizix-retail-mapreduce-reprocess:canary_6.57.x
+    environment:
+      - VIZIX_KAFKA_SERVERS=kafka:9092
+      - VIZIX_MONGO_WRITE_CONCERN=ACKNOWLEDGED
+      - VIZIX_KAFKA_TOPICS=___v1___analytics___mapreduce
+      - VIZIX_MONGO_URI=mongodb://admin:<password>@mongo:27017/?authSource=admin
+      - VIZIX_MONGO_COLLECTION=mr_items_vertex_[TENANT]
+      - VIZIX_MONGO_MULTIDATABASE=true
+      - VIZIX_GROUP_ID=analytics_mapreduce
+      - VIZIX_KAFKA_OFFSET_RESET=latest
+    networks:
+      - iot
+    deploy:
+      placement:
+         constraints:
+           - node.labels.host == <LABELnode>

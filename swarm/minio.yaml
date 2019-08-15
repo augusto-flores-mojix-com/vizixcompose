@@ -1,0 +1,30 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  minio:
+    image: minio/minio
+#   command: gateway azure to act as a gateway
+    command: server /data
+#    ports:
+#      - 9000:9000
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: m0j1xInc!Admin!
+    volumes:
+      - /data/minio:/data
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: minio

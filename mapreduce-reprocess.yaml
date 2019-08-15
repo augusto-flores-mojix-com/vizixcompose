@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: <namespace>
+  name: mapreduce-reprocess
+  labels:
+    mojix.service: mapreduce-reprocess
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: mapreduce-reprocess
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: mapreduce-reprocess
+    spec:
+      containers:
+      - name: mapreduce-reprocess
+        resources:
+          limits:
+            memory: 2000Mi
+          requests:
+            memory: 2000Mi
+        image: gcr.io/mojix-registry/vizix-retail-mapreduce-reprocess:canary_6.57.x
+        imagePullPolicy: "Always"
+        env:
+          - name: MEM_XMS
+            value: "1900m"
+          - name: MEM_XMX
+            value: "1900m"
+          - name: VIZIX_KAFKA_SERVERS
+            value: "kafka:9092"
+          - name: VIZIX_KAFKA_TOPICS
+            value: ___v1___analytics___mapreduce
+          - name: VIZIX_MONGO_URI
+            value: "mongodb://admin:<password>@mongo1:27017,mongo2:27017,mongo3:27017/?authSource=admin"
+          - name: VIZIX_MONGO_WRITE_CONCERN
+            value: "ACKNOWLEDGED"
+          - name: VIZIX_MONGO_COLLECTION
+            value: "mr_items_vertex_[TENANT]"
+          - name: VIZIX_MONGO_MULTIDATABASE
+            value: "true"
+          - name: VIZIX_GROUP_ID
+            value: analytics_mapreduce
+          - name: VIZIX_KAFKA_OFFSET_RESET
+            value: latest
+      imagePullSecrets:
+        - name: gcp-mojix-registry
+      hostname: mapreduce-reprocess
+      restartPolicy: Always

@@ -1,0 +1,60 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+#secrets:
+#   sql_password:
+#     external: true
+#   nosql_password:
+#     external: true
+
+services:
+  services:
+    image: mojix/riot-core-services:v6.45.0
+    environment:
+      - SECRETS=false
+      - MEM_XMS=3g
+      - MEM_XMX=8g
+      - VIZIX_MONGO_PRIMARY=mongo:27017
+      - VIZIX_MONGO_DB=viz_root
+      - VIZIX_MONGO_USERNAME=admin
+      - VIZIX_MONGO_PASSWORD= ##VIZIX_MONGO_PASSWORD
+      - VIZIX_MQTT_HOST=mqtt
+      - VIZIX_CONNECTION_URL=jdbc:mysql://mysql:3306/riot_main?useSSL=false&amp;characterEncoding=UTF-8
+      - VIZIX_JOBS_CONNECTION_URL=jdbc:mysql://mysql:3306/riot_main?useSSL=false
+      - VIZIX_DB_SCHEMA=riot_main
+      - VIZIX_DB_DRIVER=com.mysql.jdbc.Driver
+      - VIZIX_DB_DIALECT=org.hibernate.dialect.MySQLDialect
+      - VIZIX_DB_PASSWORD= ##VIZIX_DB_PASSWORD
+      - VIZIX_HAZELCAST_DISTRIBUTED_ENABLE=false
+#      - VIZIX_HAZELCAST_NATIVE_CLIENT_ADDRESS=hazelcast
+      - VIZIX_AUTHENTICATION_MODE=nativeAuthentication
+      - VIZIX_BROKER_CONNECTION_WAIT=false
+      - VIZIX_KAFKA_ZOOKEEPER=zookeeper:2181
+      - VIZIX_KAFKA_SERVERS=kafka:9092
+#      - VIZIX_THINGSYNC_POLL_TIMEOUT=10
+#      - VIZIX_THINGSYNC_POLL_INTERVAL=0
+#      - VIZIX_KAFKA_PARAM_CONSUMER_MAX_POLL_RECORDS=10
+#      - VIZIX_KAFKA_PARAM_PRODUCER_LINGER_MS=0
+    volumes:
+      - /data/services/data:/data
+#    secrets:
+#      - sql_password
+#      - nosql_password
+    networks:
+      - iot
+    deploy:
+      resources:
+        limits:
+          memory: 9G
+      placement:
+        constraints:
+          - node.labels.host == #HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: services

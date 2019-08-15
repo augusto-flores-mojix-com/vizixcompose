@@ -1,0 +1,11 @@
+---
+# tasks file for set-swarm-labels
+- name: Gather hostnames
+  include_tasks: getHostname.yml
+- name: Set swarm labels
+  include_tasks: setupTags.yml
+# - debug:
+#     # msg: "{{ hostvars[item].docker_host_label }}"
+#     msg: "{{ hostvars[item].ansible_hostname }}"
+#   with_inventory_hostnames:
+#     - hosts

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics
+  labels:
+    mojix.service: analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: analytics
+#    matchLabels:
+#      app: ui
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: analytics
+    spec:
+      containers:
+      - name: analytics
+        resources:
+          limits:
+            memory: 5Gi
+        image: mojix/dashboards:latest
+#        ports:
+#       - containerPort: 80
+        env:
+          - name: PORT
+            value: "3000"
+          - name: KERNEL_GATEWAY_URL
+            value: "http://notebooks:8888"
+          - name: KG_KERNEL_RETENTIONTIME
+            value: "50000"
+          - name: PUBLIC_LINK_PATTERN
+            value: "https://analytics.mojix.io"
+        volumeMounts:
+          - mountPath: "/srv/app/data"
+            name: analytics-disk
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: analytics
+      restartPolicy: Always
+      volumes:
+      - name: analytics-disk
+        persistentVolumeClaim:
+          claimName: analytics-disk
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: analytics
+  name: analytics
+spec:
+  ports:
+  - name: "3000"
+    port: 3000
+    targetPort: 3000
+  selector:
+    mojix.service: analytics
+status:
+  loadBalancer: {}

@@ -1,0 +1,26 @@
+## Validation
+kind: pipeline
+name: fire!
+
+steps:
+- name: notify-to-slack-eng
+  image: plugins/slack
+  settings:
+    webhook:
+      from_secret: slack_webhook
+    channel: vizix-release-eng
+    username: mojix-release-bot
+    icon_url:
+      from_secret: slack_icon
+    template: >
+      {{#success build.status}}
+        <{{build.link}}|[{{repo.name}}#{{build.tag}}]> {{build.event}} submitted. The build of {{repo.name}} version {{build.tag}} succeeded. 🙌🏼
+      {{else}}
+        <{{build.link}}|[{{repo.name}}#{{build.tag}}]> {{build.event}} submitted. The build of {{repo.name}} version {{build.tag}} failed. Check the <{{build.link}}| logs here> 😢.
+      {{/success}}
+  when:
+    status:
+    - success
+    - failure
+    event:
+    - tag

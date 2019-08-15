@@ -1,0 +1,3 @@
+---
+- name: Join to Swarm As Manager
+  import_tasks: join_swarm_manager.yml

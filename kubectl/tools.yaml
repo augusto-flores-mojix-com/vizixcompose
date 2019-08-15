@@ -1,0 +1,93 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vizix-tools
+spec:
+  template:
+    metadata:
+      labels:
+        app: tools
+    spec:
+      containers:
+      - name: tools
+        args: ["configure"]
+        image: mojix/vizix-tools:v6.37.0
+        env:
+          - name: VIZIX_SYSCONFIG
+            value: "true"
+          - name: VIZIX_SYSCONFIG_OPTION
+            value: "platform-core-root"
+          - name: VIZIX_SYSCONFIG_TENANT_CODE
+            value: "ROOT"
+          - name: VIZIX_SYSCONFIG_TENANT_NAME
+            value: "ROOT"
+          - name: VIZIX_SYSCONFIG_CREATE_TENANT
+            value: "true"
+          - name: VIZIX_SYSCONFIG_HIERARCHY
+            value: ">ROOT"
+          - name: VIZIX_SYSCONFIG_CLEAN
+            value: "true"
+          - name: VIZIX_KAFKA_SERVERS
+            value: "kafka1:9092,kafka2:9092,kafka3:9092"
+          - name: VIZIX_KAFKA_ZOOKEEPER
+            value: "zookeeper:2181"
+          - name: VIZIX_KAFKA_DATA_PARTITIONS
+            value: "96"
+          - name: VIZIX_KAFKA_CREATE_TOPICS
+            value: "true"
+          - name: VIZIX_KAFKA_LOAD_CACHE
+            value: "true"
+          - name: VIZIX_KAFKA_DATA_RETENTION_UPDATER
+            value: "true"
+          - name: VIZIX_SITE_CONFIG
+            value: "true"
+          - name: VIZIX_KAFKA_DESCRIBE_TOPICS
+            value: "true"
+          - name: VIZIX_KAFKA_DATA_RETENTION_BYTES
+            value: "5368709120"
+          - name: VIZIX_KAFKA_DATA_RETENTION_HOURS
+            value: "12"
+          - name: VIZIX_KAFKA_DATA_REPLICA_FACTOR
+            value: "3"
+          - name: VIZIX_MONGO_PRIMARY
+            value: "172.15.0.97:27017"
+          - name: VIZIX_MONGO_AUTHDB
+            value: "admin"
+          - name: VIZIX_MONGO_DB
+            value: "viz_root"
+          - name: VIZIX_MONGO_REPLICASET
+            value: "rs0"
+          - name: VIZIX_MONGO_USERNAME
+            value: "admin"
+          - name: VIZIX_MONGO_PASSWORD
+            value: "novella_scout_prolate"
+          - name: VIZIX_MQTT_HOST
+            value: "mqtt"
+          - name: VIZIX_MQTT_PORT
+            value: "1883"
+          - name: VIZIX_DB_DRIVER
+            value: "com.mysql.jdbc.Driver"
+          - name: VIZIX_DB_DIALECT
+            value: "org.hibernate.dialect.MySQLDialect"
+          - name: VIZIX_DB_DATABASE
+            value: "riot_main"
+          - name: VIZIX_DB_PASSWORD
+            value: "rHeAXy9ipWgppCg6iA"
+          - name: VIZIX_AUTHENTICATION_MODE
+            value: "nativeAuthentication"
+          - name: VIZIX_CONNECTION_URL
+            value: "jdbc:mysql://mysql:3306/riot_main?useSSL=false"
+          - name: VIZIX_API_PORT
+            value: "8080"
+          - name: VIZIX_API_HOST
+            value: "services"
+          - name: VIZIX_API_KEY
+            value: "7B4BCCDC"
+          - name: VIZIX_API_PATH
+            value: "/riot-core-services"
+          - name: VIZIX_HAZELCAST_DISTRIBUTED_ENABLE
+            value: "false"
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: vizix-registry
+  backoffLimit: 2

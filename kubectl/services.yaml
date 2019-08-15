@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    mojix.service: services
+  name: services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: services
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: services
+    spec:
+      containers:
+      - name: services
+        image: mojix/riot-core-services:v6.37.0
+        env:
+        - name: MEM_XMS
+          value: 4g
+        - name: MEM_XMX
+          value: 8g
+        - name: VIZIX_AUTHENTICATION_MODE
+          value: nativeAuthentication
+        - name: VIZIX_BROKER_CONNECTION_WAIT
+          value: "false"
+        - name: VIZIX_CONNECTION_URL
+          value: jdbc:mysql://mysql:3306/riot_main?useSSL=false&amp;characterEncoding=UTF-8
+        - name: VIZIX_DB_DIALECT
+          value: org.hibernate.dialect.MySQLDialect
+        - name: VIZIX_DB_DRIVER
+          value: com.mysql.jdbc.Driver
+        - name: VIZIX_DB_PASSWORD
+          value: rHeAXy9ipWgppCg6iA
+        - name: VIZIX_DB_SCHEMA
+          value: riot_main
+        - name: VIZIX_HAZELCAST_DISTRIBUTED_ENABLE
+          value: "false"
+        - name: VIZIX_HAZELCAST_NATIVE_CLIENT_ADDRESS
+          value: hazelcast
+        - name: VIZIX_HOME_SERVICES
+          value: /jar
+        - name: VIZIX_KAFKA_ENABLED
+          value: "true"
+        - name: VIZIX_KAFKA_SERVERS
+          value: "kafka1:9092,kafka2:9092,kafka3:9092"
+        - name: VIZIX_KAFKA_ZOOKEEPER
+          value: zookeeper:2181
+        - name: VIZIX_MONGO_PRIMARY
+          value: "172.15.0.97:27017"
+        - name: VIZIX_MONGO_SECONDARY
+          value: "172.15.0.101:27017"
+        - name: VIZIX_MONGO_AUTHDB
+          value: "admin"
+        - name: VIZIX_MONGO_DB
+          value: "viz_root"
+        - name: VIZIX_MONGO_REPLICASET
+          value: "rs0"
+        - name: VIZIX_MONGO_USERNAME
+          value: "admin"
+        - name: VIZIX_MONGO_PASSWORD
+          value: "novella_scout_prolate"
+        - name: VIZIX_MQTT_HOST
+          value: mqtt
+        resources:
+          limits:
+            memory: 10Gi
+        volumeMounts:
+          - mountPath: /data
+            name: services-disk
+      hostname: services
+      restartPolicy: Always
+      volumes:
+      - name: services-disk
+        persistentVolumeClaim:
+          claimName: services-disk
+      imagePullSecrets:
+        - name: mojix-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: services
+  name: services
+spec:
+  ports:
+  - name: "8080"
+    port: 8080
+    targetPort: 8080
+  selector:
+    mojix.service: services
+status:
+  loadBalancer: {}

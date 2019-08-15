@@ -1,0 +1,12 @@
+  - name: "get docker info"
+    shell: docker info
+    register: docker_info
+    changed_when: False
+  - name: "join as a manager"
+    ### Azure, this also works
+    # shell: "docker swarm join --token {{ hostvars['MAIN_HOST']['manager_token']['stdout'] }} {{ hostvars['MAIN_HOST']['ansible_eth0']['ipv4']['address'] }}:2377"
+    ### Generic
+    shell: "docker swarm join --token {{ hostvars['MAIN_HOST']['manager_token']['stdout'] }} {{ hostvars['MAIN_HOST']['ansible_default_ipv4']['address'] }}:2377"
+    when: docker_info.stdout.find("Swarm{{':'}} inactive") != -1
+    retries: 3
+    delay: 20

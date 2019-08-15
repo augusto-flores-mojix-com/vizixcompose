@@ -1,0 +1,16 @@
+- name: Downloading BackUp file
+  get_url:
+    url: "{{ mongo_backup_fileurl }}"
+    dest: /tmp/{{mongo_file_name}}
+- name: Copy file to docker container
+  command: docker cp /tmp/"{{mongo_archive_file}}" "{{mongo_container_name}}":/tmp/
+- name: Restore Data to Mongo (GZIP)
+  command: docker exec {{mongo_container_name}} sh -c 'mongorestore --db {{mongo_database}} --username {{mongo_user}} --password {{mongo_password}} --authenticationDatabase admin --drop --gzip --archive=/tmp/{{mongo_archive_file}}'
+  when: mongo_backup_no_gzip is undefined
+- name: Restore Data to Mongo (No GZIP)
+  command: docker exec {{mongo_container_name}} sh -c 'mongorestore --db {{mongo_database}} --username {{mongo_user}} --password {{mongo_password}} --authenticationDatabase admin --drop --archive=/tmp/{{mongo_archive_file}}'
+  when: mongo_backup_no_gzip is defined
+- name: Clean Up Files ("{{mongo_container_name}}")
+  command: docker exec "{{mongo_container_name}}" rm /tmp/{{mongo_archive_file}}
+- name: Clean Up Files ("Server")
+  command: rm /tmp/{{mongo_archive_file}}

@@ -1,0 +1,42 @@
+SERVICES_URL=$SERVICES_URL
+
+VIZIX_DATA_PATH=$VIZIX_DATA_PATH
+
+UI=$VIZIX_UI_VERSION
+SERVICES=$VIZIX_SERVICES_VERSION
+BRIDGES=$VIZIX_BRIDGES_VERSION
+VIZIXTOOLS=$VIZIX_TOOLS_VERSION
+KAFKA=mojix/kafka:v2.1.0
+ZOOKEEPER=zookeeper:3.4.12
+
+HAZELCAST=mojix/vizix-hc-server:develop
+MQTT=mojix/emqtt:2.2.0
+
+MONGO_HOST=mongo
+MONGO=mongo:4
+VIZIX_MONGO_DB=viz_root
+VIZIX_MONGO_USERNAME=admin
+VIZIX_MONGO_PASSWORD=control123!
+
+DB_HOST=mysql
+MYSQL=mysql:8
+VIZIX_DB_DATABASE=riot_main
+VIZIX_DB_PASSWORD=control123!
+
+FLOW=mojix/flow:v1.0.1
+PROXY=mojix/proxy:0.10.11
+
+NTPD=2infinity/openntpd:latest
+LOGIO=temal/logio-server:latest
+LOGS=gerchardon/docker-logio:latest
+
+# per cluster common config
+ZOOKEEPER_ADDRESS=zookeeper:2181
+#ZOOKEEPER_ADDRESS=zookeeper1:2181,zookeeper2:2181,zookeeper3:2181 If using Cluster
+
+KAFKA_ADDRESS=kafka:9092
+#KAFKA_ADDRESS=kafka1:9092,kafka2:9092,kafka3:9092 If using Cluster
+
+# need to rename these variables, so they can be understood better.
+KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181

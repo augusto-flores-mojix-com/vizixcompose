@@ -1,0 +1,4 @@
+---
+# tasks file for roles/join-swarm-worker
+- name: Join to Swarm As Worker
+  import_tasks: join_swarm_worker.yml

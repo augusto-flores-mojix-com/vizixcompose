@@ -1,0 +1,17 @@
+init_config:
+##This Configuration should only be used in case internal http checks. For Global check, please use UptimeRobot.
+instances:
+  - name: jupyter
+    url: https://notebooks.<customer>.vizixcloud.com
+    # days_warning: 28                   # default 14
+    # days_critical: 14                  # default 7
+    # timeout: 3                         # in seconds. Default is 1.
+    skip_event: true # Default is false, i.e. emit events instead of service checks. Recommend to set to true.
+    tags:
+      - notebooks.<customer>.vizixcloud.com.http.check
+
+  - name: dashboards
+    url: https://analytics.<customer>.vizixcloud.com/dashboards
+    skip_event: true
+    tags:
+      - analytics.<customer>.vizixcloud.com.http.check

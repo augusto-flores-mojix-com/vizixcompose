@@ -1,0 +1,54 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  rulesprocessor:
+    image: mojix/riot-core-bridges:v6.45.0
+    environment:
+      #JAVA_OPTS: "-agentpath:/app/jprofiler/bin/linux-x64/libjprofilerti.so=nowait"
+      MEM_XMS: $MEM_XMX
+      MEM_XMX: 4g
+      VIZIX_ESPER: 'no'
+      VIZIX_BRIDGE_TYPE: rulesprocessor
+      VIZIX_KAFKA_CODE: RulesProcessor
+      VIZIX_KAFKA_SERVERS: kafka:9092
+      VIZIX_LOG_LEVEL: 'INFO'
+      VIZIX_KAFKA_CACHE_TICKLE_MODE: 'MONGO_INJECTOR'
+      #VIZIX_DEDICATED_OOO_FIXER: "true"   To split the data for OOO fixer mongoinjector
+      #VIZIX_STREAM_APP_LOWMEM_MINIMUM_GC_WAIT: ## defaults 30 seconds.
+      #VIZIX_CRITICAL_MEMORY_THRESHOLD: ## default 200 MB  (cleans up all memory when 200MB is free for the container)
+      #VIZIX_WARNING_MEMORY_THRESHOLD: ## defaults 600 MB (cleans up some memory when 600MB is free for the container)
+      #VIZIX_THING_CACHE_SIZE_MB: ## 2048 amount of memory reserved for GC
+      #VIZIX_THING_CACHE_EVICTION_TIME: 30240 In MINUTES forced eviction after 3 weeks of no use
+      #VIZIX_MAX_ERRORS_ON_RULE_THRESHOLD: 10 ##times before a rule is disabled defaults 10
+      #VIZIX_ZDF_MAX_DATA_SIZE_MB: 256 ## in MB, this one is small
+      #VIZIX_ZDF_MAX_THINGS_SIZE_MB: 1024 ## in MB, this is tipically big
+      VIZIX_STREAM_REAL_TIME_LINGER_MS: 0
+      VIZIX_STREAM_REAL_TIME_BATCH_SIZE: 8192
+      VIZIX_STREAM_REAL_TIME_MAX_POLL_RECORDS: 10
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      resources:
+        limits:
+          memory: 5g
+      placement:
+        constraints:
+          - node.labels.host == ##
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/status"]
+      interval: 50s
+      timeout: 10s
+      retries: 2
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: rulesprocessor

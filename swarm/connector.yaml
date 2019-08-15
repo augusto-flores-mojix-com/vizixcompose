@@ -1,0 +1,38 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  connector:
+    image: mojix/connector:v1.0.2
+    networks:
+      - iot
+#    ports:
+#      - 8083:8083
+    environment:
+      VIZIX_GROUP_ID: #VIZIX_GROUP_ID
+      VIZIX_KAFKA_SERVERS: kafka:9092
+      KAFKA_KEY_CONVERTER_SCHEMAS_ENABLE: "true"
+      KAFKA_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      INTERNAL_KEY_CONVERTER_SCHEMAS_ENABLE: "true"
+      INTERNAL_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      KAFKA_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      KAFKA_VALUE_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      ## In case GooglePubSub is Required
+      GOOGLE_APPLICATION_CREDENTIALS: '<filename.json>'
+      VIZIX_PUBSUB_VERIFY_SUBSCRIPTION_ENABLE: "false"
+# If GooglePubSub is required, a certificate in JSON format should be available as a persistance
+#    volumes:
+#      - /data/connector/json:/config
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == #HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ##PAPERTRAIL_LINK
+        tag: connector

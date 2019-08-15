@@ -1,0 +1,115 @@
+ad_identifiers:
+# The following labels should be applied to the containers for the autodiscovery feature works
+# image names can also be used
+#
+# It is important to send the correct CATALINA_OPTS to the containers to allow them to accept remote jmx connections
+#  - services
+#  - hazelcast
+#  - M2K
+#  - k2M
+#  - httpbridge
+#  - transformbridge
+#  - rulesprocessor
+#  - mongoinjector
+  - riot-core-services
+  - riot-core-bridges
+  - vizix-hc-server
+
+instances:
+# Use these variables to enable the autodiscovery feature of the ddagent to work with docker swarm
+    - host: %%host%%
+      port: %%port%%
+  #   user: username
+  #   password: password
+  #   process_name_regex: .*process_name.* # Instead of specifying a host, and port. The agent can connect using the attach api.
+  #                                                                       #   This requires the JDK to be installed and the path to tools.jar to be set below.
+  #   tools_jar_path: /usr/lib/jvm/java-7-openjdk-amd64/lib/tools.jar # To be set when process_name_regex is set
+      name: tomcat_instance
+  #   # java_bin_path: /path/to/java # Optional, should be set if the agent cannot find your java executable
+  #   # java_options: "-Xmx200m -Xms50m" # Optional, Java JVM options
+  #   # trust_store_path: /path/to/trustStore.jks # Optional, should be set if ssl is enabled
+  #   # trust_store_password: password
+      tags:
+        env: test_devops
+
+init_config:
+is_jmx: true
+collect_default_metrics: true
+
+# List of metrics to be collected by the integration
+# Read http://docs.datadoghq.com/integrations/java/ to learn how to customize it
+# Agent 5: Customize all your metrics below
+# Agent 6: The default metrics to be collected are kept in metrics.yaml, but you can still add your own metrics here
+conf:
+  - include:
+      type: ThreadPool
+      attribute:
+        maxThreads:
+          alias: tomcat.threads.max
+          metric_type: gauge
+        currentThreadCount:
+          alias: tomcat.threads.count
+          metric_type: gauge
+        currentThreadsBusy:
+          alias: tomcat.threads.busy
+          metric_type: gauge
+  - include:
+      type: GlobalRequestProcessor
+      attribute:
+        bytesSent:
+          alias: tomcat.bytes_sent
+          metric_type: counter
+        bytesReceived:
+          alias: tomcat.bytes_rcvd
+          metric_type: counter
+        errorCount:
+          alias: tomcat.error_count
+          metric_type: counter
+        requestCount:
+          alias: tomcat.request_count
+          metric_type: counter
+        maxTime:
+          alias: tomcat.max_time
+          metric_type: gauge
+        processingTime:
+          alias: tomcat.processing_time
+          metric_type: counter
+  - include:
+      j2eeType: Servlet
+      attribute:
+        processingTime:
+          alias: tomcat.servlet.processing_time
+          metric_type: counter
+        errorCount:
+          alias: tomcat.servlet.error_count
+          metric_type: counter
+        requestCount:
+          alias: tomcat.servlet.request_count
+          metric_type: counter
+  - include:
+      type: Cache
+      attribute:
+        accessCount:
+          alias: tomcat.cache.access_count
+          metric_type: counter
+        hitsCounts:
+          alias: tomcat.cache.hits_count
+          metric_type: counter
+  - include:
+      type: JspMonitor
+      attribute:
+        jspCount:
+          alias: tomcat.jsp.count
+          metric_type: counter
+        jspReloadCount:
+          alias: tomcat.jsp.reload_count
+          metric_type: counter
+  - include:
+      domain: java.lang
+      type: javax.management.openmbean.CompositeData
+      bean:
+        - java.lang:type=Memory
+      attribute:
+        HeapMemoryUsage:
+          alias: HeapMemoryUsage
+          metric_type: gauge

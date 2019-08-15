@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-disk
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 30Gi
+  accessModes:
+  - ReadWriteOnce
+  nfs:
+    path: /data/nfs/mysql-vol
+    server: 172.15.0.106
+  persistentVolumeReclaimPolicy: Retain
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    mojix.service: mysql-disk
+  name: mysql-disk
+spec:
+  storageClassName: manual
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi

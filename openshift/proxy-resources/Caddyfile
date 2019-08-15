@@ -1,0 +1,82 @@
+:80 {
+  gzip
+  tls off
+  log stdout
+  errors stderr
+  timeouts 2h
+  tls self_signed
+
+  proxy / ui:80 {
+    policy round_robin
+    health_check /console/extra/git.json
+    transparent
+  }
+
+  rewrite /riot-core-services {
+    if {path} has thingBridge
+    r /api(.*)
+    to /http-bridge{1}
+  }
+
+  proxy /http-bridge hbridge:8080 {
+    policy round_robin
+    health_check /http-bridge/thingBridge/thing
+    transparent
+    websocket
+  }
+
+  proxy /riot-core-services services:8080 {
+    policy round_robin
+    health_check /riot-core-services/api/swagger.json
+    transparent
+  }
+
+  redir /flow /flow/
+
+  proxy /flow flow:1880 {
+    policy round_robin
+    without /flow
+    health_check /
+    transparent
+    websocket
+  }
+
+  redir /logs /logs/
+
+  proxy /logs logio:28778 {
+    policy round_robin
+    without /logs
+    health_check /
+    transparent
+    websocket
+  }
+
+  redir /socket.io /socket.io/
+
+  proxy /socket.io logio:28778 {
+    policy round_robin
+    health_check /
+    transparent
+    websocket
+  }
+
+}
+
+:9090 {
+  tls off
+  log stdout
+  errors stderr
+  timeouts 2h
+
+  rewrite / {
+    r (.*)
+    to /http-bridge/v1/data/<SPECNAME>/<THINGTYPE>/{1}
+  }
+
+  proxy / hbridge:8080 {
+    policy round_robin
+    health_check /http-bridge/thingBridge/thing
+    transparent
+  }
+}
+

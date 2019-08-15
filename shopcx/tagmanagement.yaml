@@ -1,0 +1,90 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+volumes:
+  static:
+
+services:
+
+  tag-management:
+    image: mojix/tag-management:v6.45.0
+    environment:
+      # Receiving XML properties
+      regexp.receiving.tags.asn: receivingTags_.*\.xml
+      control.file.extension: .end
+      api.configuration.tag.management.premise.code: tag.management.premise.code
+      api.epcis.search.protocol: http
+      api.epcis.search.host: internaltransformer
+      api.epcis.search.port: 8080
+      api.product.protocol: http
+      api.product.host: internaltransformer
+      api.product.port: 8080
+      api.epcis.input.protocol: http
+      api.epcis.input.host: internaltransformer
+      api.epcis.input.port: 8080
+      api.configuration.location.protocol: http
+      api.configuration.location.host: internaltransformer
+      api.configuration.location.port: 8080
+      api.configuration.translation.protocol: http
+      api.configuration.translation.host: internaltransformer
+      api.configuration.translation.port: 8080
+      # single tenant mode (MYSQL_DATABASE is set):
+      JAVA_OPTS: -DMYSQL_DATABASE=tagmanagement -DMYSQL_USER=root -DMYSQL_PASSWORD=##### -DMYSQL_URL=shopcx-mysql -DMYSQL_PORT=3306 -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1  -XshowSettings:vm
+      # multi tenant mode: (do not set MYSQL_DATABASE)
+      #JAVA_OPTS: -DMYSQL_USER=root -DMYSQL_PASSWORD=##### -DMYSQL_URL=shopcx-mysql -DMYSQL_PORT=3306 -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1  -XshowSettings:vm
+
+      tagmanagement.kafka.bootstrap-servers : 'kafka:9092' # needed for multitenant, not needed in single-tenant
+
+      #optional multitenant configuration :
+      #input.path: /usr/local/exchangecl/__tenant__/input
+      #(this means __tenant__ will get replaced with tenant code)
+
+    volumes:
+      - /data/tagmanagement/ftpusers/tagm/files:/usr/local/exchangecl
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ####
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ####
+        tag: tag-management
+
+  sftp_tag_management:
+    image: atmoz/sftp
+    ports:
+      - target: 22
+        published: 2201
+        protocol: tcp
+        mode: host
+      - target: 22
+        published: 2201
+        protocol: udp
+        mode: host
+    volumes:
+      - /data/tagmanagement/sftp/users.conf:/etc/sftp/users.conf:ro
+      - /data/tagmanagement/sftp/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key
+      - /data/tagmanagement/sftp/ssh_host_rsa_key:/etc/ssh/ssh_host_rsa_key
+      - /data/tagmanagement/ftpusers:/home
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ###
+        tag: sftp-tag-management

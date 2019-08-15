@@ -1,0 +1,62 @@
+version: "2.3"
+services:
+
+  mysqla:
+    image: ${MYSQL}
+    ports:
+      - 3306:3306
+    restart: always
+    hostname: mysqla
+    container_name: mysqla
+    #mem_reservation: 512m
+    command: --max_allowed_packet=1024M --max_connections=7000 --interactive_timeout=3600 --wait_timeout=3600 --lower_case_table_names=0 --net_write_timeout=3600 --net_read_timeout=3600 --innodb_lock_wait_timeout=600 --skip-name-resolve --innodb_thread_sleep_delay=60000000 --default-authentication-plugin=mysql_native_password --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    volumes:
+      - ${VIZIX_DATA_PATH}/mysqla:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${VIZIX_DB_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${VIZIX_DB_PASSWORD}
+
+  mysqlb:
+    image: ${MYSQL}
+    ports:
+      - 3307:3306
+    restart: always
+    hostname: mysqlb
+    container_name: mysqlb
+    #mem_reservation: 512m
+    command: --max_allowed_packet=1024M --max_connections=7000 --interactive_timeout=3600 --wait_timeout=3600 --lower_case_table_names=0 --net_write_timeout=3600 --net_read_timeout=3600 --innodb_lock_wait_timeout=600 --skip-name-resolve --innodb_thread_sleep_delay=60000000 --default-authentication-plugin=mysql_native_password --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    volumes:
+      - ${VIZIX_DATA_PATH}/mysqlb:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${VIZIX_DB_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${VIZIX_DB_PASSWORD}
+
+  mysqlc:
+    image: ${MYSQL}
+    ports:
+      - 3308:3306
+    restart: always
+    hostname: mysqlc
+    container_name: mysqlc
+    #mem_reservation: 512m
+    command: --max_allowed_packet=1024M --max_connections=7000 --interactive_timeout=3600 --wait_timeout=3600 --lower_case_table_names=0 --net_write_timeout=3600 --net_read_timeout=3600 --innodb_lock_wait_timeout=600 --skip-name-resolve --innodb_thread_sleep_delay=60000000 --default-authentication-plugin=mysql_native_password --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    volumes:
+      - ${VIZIX_DATA_PATH}/mysqlc:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${VIZIX_DB_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${VIZIX_DB_PASSWORD}
+
+  mysqlroutera:
+    image: mysql/mysql-router:8.0
+    ports:
+      - 6446:6446
+    restart: always
+    hostname: mysqlroutera
+    container_name: mysqlroutera
+    #mem_reservation: 512m
+    environment:
+      - MYSQL_HOST=mysqla
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=control123!
+      - MYSQL_INNODB_NUM_MEMBERS=3

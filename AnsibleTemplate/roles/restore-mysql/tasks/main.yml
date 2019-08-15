@@ -1,0 +1,8 @@
+---
+# tasks file for roles/restore-mysql
+- name: Restore a MySQL BackUP
+  import_tasks: restore.yml
+  vars:
+    mysql_file_name: "{{ mysql_backup_fileurl | basename }}"
+    mysql_sql_file: "{{mysql_file_name.split('.gz')[0]}}"
+  when: (ansible_os_family|lower == 'debian') or (ansible_os_platform|lower == 'debian')

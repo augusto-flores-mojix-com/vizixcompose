@@ -1,0 +1,42 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  mqtt:
+    image: mojix/emqtt:2.2.0
+    ports:
+      - target: 1883
+        published: 1883
+        protocol: tcp
+        mode: host
+      - target: 18083
+        published: 18083
+        protocol: tcp
+        mode: host
+    networks:
+      - iot
+    environment:
+      - EMQ_MQTT__CLIENT__ENABLE_STATS=on
+      - EMQ_MQTT__SESSION__ENABLE_STATS=on
+      - EMQ_MQTT__MAX_PACKET_SIZE=1024000KB
+      - EMQ_MQTT__SESSION__MAX_INFLIGHT=1
+      - EMQ_MQTT__CLIENT__IDLE_TIMEOUT=120s
+      - EMQ_MQTT__SESSION__EXPIRY_INTERVAL=5s
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+      resources:
+        limits:
+          memory: 3g
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: mqtt

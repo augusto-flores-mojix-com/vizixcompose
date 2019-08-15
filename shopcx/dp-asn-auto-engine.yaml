@@ -1,0 +1,39 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  dp-asn-auto-engine:
+    image: mojix/dp-asn-auto-engine:v6.45.0
+    environment:
+      amqp.host: shopcx-rabbitmq
+      amqp.port: '5672'
+      amqp.user: admin
+      amqp.password: ##PASS
+      api.supplychain.host: internaltransformer
+      api.supplychain.port: '8080'
+      supplychain.client.timeout.ms: '10000'
+      supplychain.circuit.maxfailures: '50'
+      api.configuration.host: internaltransformer
+      api.configuration.port: '8080'
+      configuration.client.timeout.ms: '10000'
+      configuration.circuit.maxfailures: '50'
+      hystrix.port: '4444'
+      influxdb.uri: http://shopcx-influxdb:8086
+      influxdb.user: admin
+      influxdb.password: 156p!mi56d15
+      influxdb.db: asnauto
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: dp-asn-auto-engine

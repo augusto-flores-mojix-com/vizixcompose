@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    mojix.service: reports
+  name: reports
+  namespace: ##namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: reports
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: reports
+    spec:
+      containers:
+      - name: reportsapiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    mojix.service: reports
+  name: reports
+  namespace: ##namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: reports
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: reports
+    spec:
+      containers:
+      - name: reports
+        image: mojix/riot-core-reports:dev_6.x.x
+        imagePullPolicy: "Always"
+        resources:
+          limits:
+            memory: 1000Mi
+          requests:
+            memory: 1000Mi
+        env:
+        - name: MEM_XMS
+          value: "700m"
+        - name: MEM_XMX
+          value: "700m"
+        # Mongo stuff
+        - name: VIZIX_MONGO_PRIMARY
+          valueFrom:
+            configMapKeyRef:
+              name: infrastructure-config
+              key: mongo.atlas.primary
+        - name: VIZIX_MONGO_SECONDARY
+          valueFrom:
+            configMapKeyRef:
+              name: infrastructure-config
+              key: mongo.atlas.secondary
+        - name: VIZIX_MONGO_AUTHDB
+          value: "admin"
+        - name: VIZIX_MONGO_DB
+          value: "viz_root"
+        - name: VIZIX_MONGO_USERNAME
+          value: "admin"
+        - name: VIZIX_MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vizix-secrets
+              key: mongo-password
+        - name: VIZIX_MONGO_REPLICASET
+          valueFrom:
+            configMapKeyRef:
+              name: infrastructure-config
+              key: mongo.atlas.replicaset
+        - name: VIZIX_MONGO_SSL
+          value: "true"
+        - name: VIZIX_MONGO_ATLAS_ENVIRONMENT
+          value: "true"
+        - name: VIZIX_MONGO_ATLAS_CLOUD
+          valueFrom:
+            configMapKeyRef:
+              name: infrastructure-config
+              key: mongo.atlas.cloud
+        - name: VIZIX_MONGO_ATLAS_USER
+          valueFrom:
+            secretKeyRef:
+              name: vizix-secrets
+              key: mongo-atlas-user
+        - name: VIZIX_MONGO_ATLAS_APIKEY
+          valueFrom:
+            secretKeyRef:
+              name: vizix-secrets
+              key: mongo-atlas-apikey
+       
+        - name: VIZIX_CONNECTION_URL
+          value: jdbc:mysql://mysql:3306/riot_main?useSSL=false&amp;characterEncoding=UTF-8
+        - name: VIZIX_DB_SCHEMA
+          value: "riot_main"
+        - name: VIZIX_DB_DRIVER
+          value: "com.mysql.jdbc.Driver"
+        - name: VIZIX_DB_DIALECT
+          value: "org.hibernate.dialect.MySQLDialect"
+        - name: VIZIX_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vizix-secrets
+              key: mysql-password
+        - name: VIZIX_HAZELCAST_DISTRIBUTED_ENABLE
+          value: "false"
+        - name: VIZIX_AUTHENTICATION_MODE
+          value: "nativeAuthentication"
+
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: reports
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ##namespace
+  labels:
+    mojix.service: reports
+  name: reports
+spec:
+  ports:
+  - name: "8080"
+    port: 8080
+    targetPort: 8080
+  selector:
+    mojix.service: reports
+status:
+  loadBalancer: {}  

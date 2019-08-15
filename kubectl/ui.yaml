@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  labels:
+    mojix.service: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: ui
+#    matchLabels:
+#      app: ui
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: ui
+    spec:
+      containers:
+      - name: ui
+        resources: {}
+        image: mojix/riot-core-ui:v6.37.0
+#        ports:
+#       - containerPort: 80
+        env:
+          - name: VIZIX_API_HOST
+            value: "www.mojix.io"
+          - name: VIZIX_API_SECURE
+            value: "1"
+      imagePullSecrets:
+        - name: mojix-registry
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: ui
+  name: ui
+spec:
+  ports:
+  - name: "80"
+    port: 80
+    targetPort: 80
+  selector:
+    mojix.service: ui
+status:
+  loadBalancer: {}

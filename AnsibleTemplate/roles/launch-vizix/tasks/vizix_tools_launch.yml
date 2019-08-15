@@ -1,0 +1,5 @@
+- name: Execute PopDB
+  shell: cd /opt/vizix && docker-compose run --rm services /run.sh install platform-core-root clean -f
+  when: make_popdb is defined
+- name: Launch Vizix Tools
+  shell: cd /opt/vizix && docker-compose -f vizix-tools.yml up

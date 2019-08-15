@@ -1,0 +1,114 @@
+### This YAML is used when MySQL or Kafka are outside the kubernetes cluster.
+### This will map an endpoint and the service to a name like Kafka and Mongo. When using this Mapping
+### there is no need to start kafka.yaml files in kubernetes. Actually it's not recommended
+
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  name: "kafka1"
+spec:
+  ports:
+    -
+      name: "kafka1"
+      protocol: "TCP"
+      port: 9092
+      targetPort: 9092
+      nodePort: 0
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  name: "kafka1"
+subsets:
+  -
+    addresses:
+      -
+        ip: "172.15.0.102"
+    ports:
+      -
+        port: 9092
+        name: "kafka1"
+
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  name: "kafka2"
+spec:
+  ports:
+    -
+      name: "kafka2"
+      protocol: "TCP"
+      port: 9092
+      targetPort: 9092
+      nodePort: 0
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  name: "kafka2"
+subsets:
+  -
+    addresses:
+      -
+        ip: "172.15.0.104"
+    ports:
+      -
+        port: 9092
+        name: "kafka2"
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  name: "kafka3"
+spec:
+  ports:
+    -
+      name: "kafka3"
+      protocol: "TCP"
+      port: 9092
+      targetPort: 9092
+      nodePort: 0
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  name: "kafka3"
+subsets:
+  -
+    addresses:
+      -
+        ip: "172.15.0.105"
+    ports:
+      -
+        port: 9092
+        name: "kafka3"
+
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  name: "zookeeper"
+spec:
+  ports:
+    -
+      name: "zookeeper"
+      protocol: "TCP"
+      port: 2181
+      targetPort: 2181
+      nodePort: 0
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  name: "zookeeper"
+subsets:
+  -
+    addresses:
+      -
+        ip: "172.15.0.100"
+    ports:
+      -
+        port: 2181
+        name: "zookeeper"

@@ -1,0 +1,53 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+configs:
+  haproxy:
+    file: ./haproxy.cfg
+  cert:
+    file: ./cert.pem
+
+services:
+
+  haproxy:
+    image: miguelcallejasp/proxy:haproxy
+    ports:
+      - target: 5671
+        published: 5671
+        protocol: tcp
+        mode: host
+      - target: 5672
+        published: 5672
+        protocol: tcp
+        mode: host
+      - target: 18080
+        published: 18080
+        protocol: tcp
+        mode: host
+    configs:
+      - source: haproxy
+        target: /usr/local/etc/haproxy/haproxy.cfg
+      - source: cert
+        target: /cert.pem
+    networks:
+      - iot
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18080/configurations"]
+      interval: 50s
+      timeout: 10s
+      retries: 2
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.haproxy == true
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ###
+        tag: haproxy

@@ -1,0 +1,62 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  externaltransformer:
+    image: mojix/vizix-api-transformer:v6.45.0
+    environment:
+      - MEM_XMX=3g
+      - VIZIX_AMQP_CONNECTION_URI=amqp://admin@shopcx-rabbitmq:5672
+      - VIZIX_AMQP_CONNECTION_PASSWORD= #
+      - VIZIX_AMQP_HUB_EVENT_QUEUE_NAME=statemachine_jsonEpcis_input_queue
+      - VIZIX_AMQP_HUB_TENANT= #TENANT
+      - VIZIX_API=http://services:8080/riot-core-services/api
+      - VIZIX_HTTP_BRIDGE=http://hbridge:8080/http-bridge/v1/data0/
+      - VIZIX_HTTP_BRIDGE_REAL=http://hbridge:8080/http-bridge
+      - VIZIX_CXI_API=http://proxySCX:8081
+      - VIZIX_ROOT_API_KEY= #
+      - VIZIX_TRANSFORMER_MULTITENANT_ENABLED=false
+      - VIZIX_HTTP_BRIDGE_BATCH_SIZE=500
+      - VIZIX_TOPIC_JSON2=/v2/data0/json
+      - VIZIX_MONGO_PRIMARY=mongo:27017
+      - VIZIX_MONGO_USERNAME=admin
+      - VIZIX_MONGO_PASSWORD=control123!
+      - VIZIX_MONGO_AUTHDB=admin
+      - VIZIX_MONGO_DATABASE= #viz_tenant
+###MongoReplicaSet
+#      - VIZIX_MONGO_SECONDARY=
+#      - VIZIX_MONGO_REPLICASET=
+#      - VIZIX_MONGO_SSL=false
+#      - VIZIX_MONGO_CONTROL_READPREFERENCE=primary
+#      - VIZIX_MONGO_REPORTS_READPREFERENCE=secondary
+#      - VIZIX_MONGO_SHARDING=false
+#      - VIZIX_MONGO_CONNECTION_TIMEOUT=0
+#      - VIZIX_MONGO_MAX_POOL_SIZE=0
+###Minio On Prem
+      - VIZIX_MINIO_ACCESS_KEY=minio
+      - VIZIX_MINIO_ENDPOINT=http://minio:9000
+      - VIZIX_MINIO_SECRET_KEY=m0j1xInc!Admin!
+      - VIZIX_MINIO_IMAGE_URL= #https://url/vizix-cdn
+###Minio on CDN/BlobStorage
+#      - VIZIX_MINIO_ACCESS_KEY= #blob-storage-access-key
+#      - VIZIX_MINIO_ENDPOINT=http://minio:9000
+#      - VIZIX_MINIO_SECRET_KEY= #blob-storage-secret-key
+#      - VIZIX_MINIO_IMAGE_URL=https://dev-vizix-io.blob.net
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: externaltransformer

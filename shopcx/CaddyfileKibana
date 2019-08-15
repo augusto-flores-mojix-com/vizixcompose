@@ -1,0 +1,15 @@
+# HTTPS Termination happens in Azure WAF
+# This is only HTTP 80
+
+kibana.<HOSTNAME>.vizix.io {
+
+tls off
+## tls infrastructure@mojix.com
+gzip
+log / stdout "{remote} - {user} [{when}] \"{method} {uri} {proto}\" {status} {size} {latency}"
+
+  proxy / shopcx-kibana:5601 {
+    transparent
+    policy round_robin
+  }
+}

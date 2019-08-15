@@ -1,0 +1,90 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+volumes:
+  static:
+
+services:
+
+  api-gateway:
+    image: mojix/api-gateway:v6.45.0
+    environment:
+      - SECRET_KEY=#####
+      - ALLOWED_HOSTS=*,
+      - API_HOSTS_USE_HTTPS=false
+      - BIZ_SERVER_HOSTS=externaltransformer:8080
+      - CORE_SERVER_HOSTS=externaltransformer:8080
+     #- API_HOSTS={{ env_dns_resolution }}
+     #- API_HOSTS_USE_HTTPS=false
+      - FORWARDED_ALLOW_IPS=*,
+      - LOGLEVEL=DEBUG
+      - ENABLE_REDIS_LOG=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - STATSD_HOST=localhost
+      - STATSD_PORT=8125
+    volumes:
+      - type: volume
+        source: static
+        target: /opt/api-gateway/apigateway/static
+        volume:
+          nocopy: false
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: api-gateway
+
+  nginx-api-gateway:
+    image: mojix/nginx-api-gateway:api-gateway
+    networks:
+      - iot
+    volumes:
+      - type: volume
+        source: static
+        target: /var/www/static
+        volume:
+          nocopy: true
+# These ports are for testing. If behind a proxy, delete them and uncomment DNSRR
+#    ports:
+#      - "80:80"
+#      - "8000:8000"
+    deploy:
+#      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: api-gateway-nginx
+
+  redis:
+    image: redis
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: api-gateway-redis

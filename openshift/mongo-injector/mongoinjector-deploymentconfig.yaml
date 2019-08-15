@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    mojix.service: mongoinjector
+  name: mongoinjector
+spec:
+  replicas: 1
+  selector:
+    mojix.service: mongoinjector
+  strategy:
+    resources: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: mongoinjector
+    spec:
+      containers:
+      - env:
+        - name: MEM_XMS
+          value: 2g
+        - name: MEM_XMX
+          value: 4g
+        - name: VIZIX_BRIDGE_TYPE
+          value: mongoingestor
+        - name: VIZIX_CORE_CODE
+          value: MongoInjector
+        - name: VIZIX_KAFKA_SERVERS
+          value: kafka:9092
+        image: mojix/riot-core-bridges
+        name: mongoinjector
+        resources:
+          requests:
+            memory: 2Gi 
+          limits:
+            memory: 4Gi
+      hostname: mongoinjector
+      restartPolicy: Always
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - mongoinjector
+        from:
+          kind: ImageStreamTag
+          name: riot-core-bridges:latest
+      type: ImageChange

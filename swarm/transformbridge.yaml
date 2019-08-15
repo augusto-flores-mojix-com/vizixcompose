@@ -1,0 +1,37 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  transformbridge:
+    image: mojix/riot-core-bridges:v6.45.0
+    environment:
+      MEM_XMX: 2g
+      MEM_XMS: 2g
+      VIZIX_BRIDGE_TYPE: transformbridge
+      VIZIX_KAFKA_SERVERS: kafka:9092
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+      resources:
+        limits:
+          memory: 3g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/status"]
+      interval: 50s
+      timeout: 10s
+      retries: 2
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: transformbridge

@@ -1,0 +1,95 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+#secrets:
+#   sql_password:
+#     external: true
+#   nosql_password:
+#     external: true
+
+services:
+  tools:
+    image: mojix/vizix-tools:v6.45.0
+    command: configure
+    volumes:
+      - /data/riot-core-sysconfig:/data/sysconfig
+      - /data/services/data:/data
+    networks:
+      - iot
+#    secrets:
+#      - sql_password
+#      - nosql_password
+    deploy:
+      restart_policy:
+        condition: "none"
+      placement:
+        constraints:
+          - node.role == manager
+    environment:
+      SECRETS: "false"
+    #Premigration v6.24.X Exclusive
+      VIZIX_PRE_MIGRATION: "true"
+      VIZIX_TOOLS_LOG_LEVEL: "INFO" ## Can also be DEBUG
+    #Installation Variables
+      VIZIX_SYSCONFIG: "true"
+      VIZIX_SYSCONFIG_OPTION: platform-core-root
+      VIZIX_SYSCONFIG_TENANT_CODE: MOJIX
+      VIZIX_SYSCONFIG_TENANT_NAME: MojixInc
+      VIZIX_SYSCONFIG_CREATE_TENANT: "true"
+      VIZIX_SYSCONFIG_HIERARCHY: ">TENANT"
+      VIZIX_SYSCONFIG_CREATE_THINGS: "true"
+    #Set to false when is an incremental
+      VIZIX_SYSCONFIG_CLEAN: "true"
+
+    #Kafka Enabled
+      VIZIX_KAFKA_SERVERS: kafka:9092
+      #VIZIX_KAFKA_SERVERS: kafka1:9092,kafka2:9092,kafka3:9092  if using cluster
+      VIZIX_KAFKA_ZOOKEEPER: zookeeper:2181
+      #VIZIX_KAFKA_ZOOKEEPER: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181  if using cluster
+      VIZIX_KAFKA_DATA_PARTITIONS: 24
+      VIZIX_KAFKA_CREATE_TOPICS: "true"
+      VIZIX_KAFKA_LOAD_CACHE: "true"
+      VIZIX_KAFKA_DATA_RETENTION_UPDATER: "true"
+      VIZIX_SITE_CONFIG: "true"
+      VIZIX_KAFKA_DESCRIBE_TOPICS: "true"
+      VIZIX_KAFKA_DATA_RETENTION_BYTES: 1073741824
+      VIZIX_KAFKA_DATA_RETENTION_HOURS: 2
+      VIZIX_KAFKA_DATA_REPLICA_FACTOR: 1
+
+    #Override Secret Passwords
+      VIZIX_DB_PASSWORD: control123!
+      VIZIX_MONGO_PASSWORD: control123!
+
+    #MONGODB Parameters
+      VIZIX_MONGO_PRIMARY: ##MONGO_HOST:27017
+      VIZIX_MONGO_AUTHDB: admin
+      VIZIX_MONGO_DB: viz_root
+      VIZIX_MONGO_USERNAME: admin
+     # VIZIX_MONGO_SECONDARY: ''
+     # VIZIX_MONGO_REPLICASET: ''
+     # VIZIX_MONGO_SSL: 'false'
+
+    #MQTT Broker Parameters
+      VIZIX_MQTT_HOST: mqtt
+      VIZIX_MQTT_PORT: 1883
+    #SQLDB Parameters
+      VIZIX_DB_DRIVER: com.mysql.jdbc.Driver
+      VIZIX_DB_DIALECT: org.hibernate.dialect.MySQLDialect
+      VIZIX_DB_DATABASE: riot_main
+      VIZIX_AUTHENTICATION_MODE: nativeAuthentication
+      VIZIX_CONNECTION_URL: jdbc:mysql://mysql:3306/riot_main?useSSL=false
+
+    #SERVICES Connection
+      VIZIX_API_PORT: 8080
+      VIZIX_API_HOST: services
+      VIZIX_API_KEY: 7B4BCCDC
+      VIZIX_API_PATH: /riot-core-services
+
+    #HAZELCAST Parameters
+      VIZIX_HAZELCAST_DISTRIBUTED_ENABLE: "false"
+      VIZIX_HAZELCAST_NATIVE_CLIENT_ADDRESS: hazelcast
+  

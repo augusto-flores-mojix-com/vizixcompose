@@ -1,0 +1,30 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  apigateway:
+    image: mojix/vizix-api-gateway:v6.45.0
+    ports:
+      - "18080:8080"
+    environment:
+      VIZIX_API: http://services:8080/riot-core-services/api
+      VIZIX_API_KEY: YZISSVW0EJ
+      VIZIX_TRANSFORMER_EXTERNAL_URL: http://url.vizixcloud.com
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: apigateway

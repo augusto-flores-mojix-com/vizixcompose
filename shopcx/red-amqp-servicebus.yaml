@@ -1,0 +1,53 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+services:
+  red-amqp-servicebus:
+    image: mojix/red-amqp-servicebus:v6.45.0
+  #  ports:
+  #      - 8080:8080
+    environment:
+      rabbitmq_server_host: 'shopcx-rabbitmq'
+      rabbitmq_server_port: '5672'
+      # __tenant__ is replaced by the tenant code when binding to the routing key
+      rabbitmq.tenant.routing.key: '__tenant__.*.*.in_progress'
+      rabbitmq_user: 'admin'
+      rabbitmq_password: '#####'
+      core_server_host: 'internaltransformer'
+      core_server_port: 8080
+      core_server_auth: "Basic XXXXXXX"
+      error_redelivery_delay: 6000
+      amqp.azure.bus.tenants: 'RED'
+      amqp.azure.bus.red.url: 'amqp://azurehost:5672'
+      amqp.azure.bus.red.user: 'azure'
+      amqp.azure.bus.red.password: 'pass'
+      amqp.azure.bus.red.topic: 'azuretopic'
+
+      #more tenants:
+      #amqp.azure.bus.tenants: 'RED,ECLIPSE'
+      #amqp.azure.bus.eclipse.url: 'amqp://azurehost2:5673'
+      #amqp.azure.bus.eclipse.user: 'azure2'
+      #amqp.azure.bus.eclipse.password: 'pass2'
+      #amqp.azure.bus.eclipse.topic: 'azuretopic2'
+
+
+      amqp_azure_bus_service_url: 'false'
+      amqp_azure_bus_service_user: 'false'
+      amqp_azure_bus_service_password: 'false'
+      amqp_azure_topic: 'false'
+      error_route_cron: '12 2/5 * * * ?'
+      main_route_consumers_quantity: 5
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == node3
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// #####
+        tag: red-amqp-servicebus

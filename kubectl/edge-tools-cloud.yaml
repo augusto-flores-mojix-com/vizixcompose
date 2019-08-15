@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: edge-tools-cloud
+spec:
+  template:
+    metadata:
+      labels:
+        app: edge-tools-cloud
+    spec:
+      containers:
+      - name: edge-tools-cloud
+        image: mojix/edge-tools-cloud:v1.0.0
+        env:
+          - name: VIZIX_CLOUD_SERVER_ADDRESS
+            value: "https://"
+          - name: VIZIX_CLOUD_API_KEY
+            value: ""
+          - name: VIZIX_CLOUD_ZOOKEEPER_ADDRESS 
+            value: "zookeeper:2181"
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: vizix-registry
+  backoffLimit: 2

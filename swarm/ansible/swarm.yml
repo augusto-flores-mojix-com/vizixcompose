@@ -1,0 +1,65 @@
+---
+- hosts: all
+  remote_user: vizix
+  become: true
+  # gather_facts: false
+  # pre_tasks:
+  #   - raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+  #     register: output
+  #     changed_when: output.stdout != ""
+  #   - setup:
+  tasks:
+    # - raw: docker swarm init --advertise-addr 10.100.2.9 --listen-addr 10.100.2.9
+    # - raw: docker service create   --name=viz   --publish=8001:8080/tcp   --constraint=node.role==manager   --mount=type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock   dockersamples/visualizer
+    - raw: mkdir -p /opt/monitoring /data/zookeeper/data /data/zookeeper/datalog /data/mysql /data/mongo /data/kafka /data/endorsed /data/rulesprocessor-data /data/mongoinjector-data /data/transformbridge-data /data/k2m-data /data/prometheus /data/grafana
+    - copy:
+        src: ../core.yml
+        dest: /root/
+    - copy:
+        src: ../services.yml
+        dest: /root/
+    - copy:
+        src: ../stream-apps.yml
+        dest: /root/
+    - copy:
+        src: ../vizix-tools.yml
+        dest: /root/
+    - copy:
+        src: ../monitoring/monitoring.yml
+        dest: /opt/monitoring/
+    - copy:
+        src: ../monitoring/prometheus.yml
+        dest: /opt/monitoring/
+    - copy:
+        src: ../monitoring/tomcat.yaml
+        dest: /opt/monitoring/
+    - copy:
+        src: ../monitoring/jmx.yaml
+        dest: /opt/monitoring/
+    - copy:
+        src: ../monitoring/kafka.yaml
+        dest: /opt/monitoring/
+    - copy:
+        src: ../monitoring/kafka_consumer.yaml
+        dest: /opt/monitoring/
+    # - shell: docker swarm join-token worker -q
+    #   register: token
+    # - debug: var=token.stdout
+    # - set_fact: token={{token.stdout}}    
+
+- hosts: workers
+  remote_user: vizix
+  become: true
+  # gather_facts: false
+  # pre_tasks:
+  #   - raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+  #     register: output
+  #     changed_when: output.stdout != ""
+  #   - setup:
+  tasks:
+    # - shell: docker swarm leave -f
+    # - shell: docker swarm join --token SWMTKN-1-5kdi8rqy5lbmrxkxxarn4dqy0f9f2cx1xn5idbk0xmtyw9held-elx29hxgjx34cc28rvoj00lgu 10.100.2.9:2377
+    # # - debug:
+    # #     var: hostvars
+    # #     verbosity: 4
+    # - raw: mkdir -p /data/zookeeper/data /data/zookeeper/datalog /data/mysql /data/mongo /data/kafka /data/endorsed /data/rulesprocessor-data /data/mongoinjector-data /data/transformbridge-data /data/k2m-data

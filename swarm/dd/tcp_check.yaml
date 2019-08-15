@@ -1,0 +1,21 @@
+init_config:
+
+instances:
+
+  - name: PRINTER.<customer>.vizixcloud.com
+    host: <IP> # or an IPv4/IPv6 address
+    skip_event: true
+    timeout: 60 ## It is an error after 60 seconds of not receiving data
+    port: 9100
+    collect_response_time: true # to collect network.tcp.response_time. Default is false.i
+    tags:
+      - <customer>.vizixcloud.com
+## Do not add tags that cannot be crossed referenced. 
+
+  - name: MCON.<customer>.vizixcloud.com
+    host:  <IP>
+    timeout: 60
+    port: 9100
+    collect_response_time: true
+    tags:
+      - <customer>.vizixcloud.com

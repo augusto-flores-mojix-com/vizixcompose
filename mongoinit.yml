@@ -1,0 +1,17 @@
+version: "2.3"
+services:
+
+  mongoinit:
+    image: ${MONGO}
+    ports:
+      - 27017:27017
+    restart: always
+    hostname: mongo
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${VIZIX_MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${VIZIX_MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${VIZIX_MONGO_DB}
+    command: --storageEngine=wiredTiger --journal --slowms=5000 --profile=1 --cpu --dbpath=/data/db --directoryperdb --wiredTigerCacheSizeGB=2 --wiredTigerDirectoryForIndexes --bind_ip_all
+    volumes:
+      - ${VIZIX_DATA_PATH}/mongo:/data/db

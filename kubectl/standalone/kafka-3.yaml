@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    mojix.service: kafka3
+  name: kafka3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: kafka3
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: kafka3
+    spec:
+      containers:
+      - image: mojix/kafka:v2.1.0
+        name: kafka3
+        ports:
+        - containerPort: 9092
+        resources: {}
+        env:
+          - name: KAFKA_PARAM_ADVERTISED_HOST_NAME
+            value: kafka3:9092
+          - name: KAFKA_PARAM_ADVERTISED_LISTENERS
+            value: PLAINTEXT://kafka3:9092
+          - name: KAFKA_PARAM_BROKER_ID
+            value: "3"
+          - name: KAFKA_MAX_MEMORY
+            value: 4g
+          - name: KAFKA_MIN_MEMORY
+            value: 4g
+          - name: KAFKA_PARAM_ZOOKEEPER_CONNECT
+            value: zookeeper:2181
+        volumeMounts:
+        - mountPath: "/data"
+          name: kafka-3-disk
+      volumes:
+      - name: kafka-3-disk
+        persistentVolumeClaim:
+          claimName: kafka-3-disk
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: kafka3
+  name: kafka3
+spec:
+  ports:
+  - name: "9092"
+    port: 9092
+    targetPort: 9092
+  selector:
+    mojix.service: kafka3
+status:
+  loadBalancer: {}

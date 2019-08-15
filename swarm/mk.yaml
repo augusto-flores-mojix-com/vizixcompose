@@ -1,0 +1,58 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  m2k:
+    image: mojix/riot-core-bridges:v6.45.0
+    environment:
+      MEM_XMX: 2g
+      MEM_XMS: 2g
+      VIZIX_BRIDGE_TYPE: m2kbridge
+      VIZIX_KAFKA_SERVERS: kafka:9092
+      VIZIX_MQTTHOST: mqtt
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+      resources:
+        limits:
+          memory: 3g
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: m2k
+
+  k2m:
+    image: mojix/riot-core-bridges:v6.45.0
+    environment:
+      MEM_XMX: 2g
+      MEM_XMS: 2g
+      VIZIX_BRIDGE_TYPE: k2mbridge
+      VIZIX_KAFKA_SERVERS: kafka:9092
+      VIZIX_MQTTHOST: mqtt
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+      resources:
+        limits:
+          memory: 2g
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: k2m

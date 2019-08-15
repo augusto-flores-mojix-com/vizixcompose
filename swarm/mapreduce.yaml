@@ -1,0 +1,30 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  mapreduce:
+    image: mojix/vizix-retail-mapreduce:canary_6.57.x
+    environment:
+      - MEM_XMS=1900m
+      - MEM_XMX=1900m
+      - VIZIX_BRIDGE_TYPE=mongoingestor
+      - VIZIX_KAFKA_SERVERS=kafka:9092
+      - VIZIX_MONGO_WRITE_CONCERN=ACKNOWLEDGED
+      - VIZIX_KAFKA_TOPICS=___v1___analytics___mapreduce
+      - VIZIX_MONGO_URI=mongodb://admin:<password>@mongo:27017/?authSource=admin
+      - VIZIX_MONGO_COLLECTION=mr_items_vertex_[TENANT]
+      - VIZIX_MONGO_MULTIDATABASE=true
+      - VIZIX_GROUP_ID=analytics_mapreduce
+      - VIZIX_KAFKA_OFFSET_RESET=latest
+      - VIZIX_PROCESS_MODE=SERIAL
+      - VIZIX_RETAIL_STATUSES=ACTIVE,CONTAINER_CLOSED,DAMAGED,DESTROYED,DISPENSED,DISPOSED,ENCODED,EXPIRED,IN_PROGRESS,IN_TRANSIT,INACTIVE,MISSING,NO_PEDIGREE_MATCH,NON_SELLABLE_OTHER,PARTIALLY_DISPENSED,RECALLED,RESERVED,RETAIL_SOLD,RETURNED,SELLABLE_ACCESSIBLE,SELLABLE_NOT_ACCESSIBLE,STOLEN,UNKNOWN
+    networks:
+      - iot
+    deploy:
+      placement:
+         constraints:
+           - node.labels.host == <LABELnode>

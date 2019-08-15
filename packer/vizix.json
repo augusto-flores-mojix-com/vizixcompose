@@ -1,0 +1,131 @@
+
+{
+  "variables": {
+
+    "vizix_version": "",
+
+    "docker_hub_username": "{{env `DOCKER_HUB_USERNAME`}}",
+    "docker_hub_password": "{{env `DOCKER_HUB_PASSWORD`}}"
+
+  },
+  "builders": [{
+    "type": "virtualbox-iso",
+    "output_directory": "build",
+    "vm_name": "vizix_build_{{user `vizix_version`}}",
+    "iso_url": "http://releases.ubuntu.com/xenial/ubuntu-16.04.5-server-amd64.iso",
+    "iso_checksum": "24636fd103a2a43c95659f1c3c63718e",
+    "iso_checksum_type": "md5",
+    "ssh_username": "vizix",
+    "ssh_password": "vizix",
+    "ssh_timeout": "30m",
+    "guest_os_type": "Ubuntu_64",
+    "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+    "disk_size": "80000",
+    "http_directory": "http",
+    "shutdown_command": "sudo systemctl poweroff",
+    "vboxmanage": [
+      ["modifyvm", "{{.Name}}", "--memory", "8192"],
+      ["modifyvm", "{{.Name}}", "--cpus", "4"]
+    ],
+    "boot_wait": "10s",
+    "headless": true,
+    "boot_command": [
+      "<enter><wait>",
+      "<f6><esc>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs>",
+      "/install/vmlinuz ",
+      "initrd=/install/initrd.gz ",
+      "net.ifnames=0 ",
+      "auto-install/enable=true ",
+      "debconf/priority=critical ",
+      "preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
+      "<enter>"
+    ]
+  }],
+  "provisioners": [{
+    "type": "file",
+    "source": "../daemon.json",
+    "destination": "/tmp/daemon.json"
+  },{
+    "type": "file",
+    "source": "../docker-compose.yml",
+    "destination": "/tmp/docker-compose.yml"
+  },{
+    "type": "file",
+    "source": "../envsample",
+    "destination": "/tmp/envsample"
+  },{
+    "type": "file",
+    "source": "../mongoinit.yml",
+    "destination": "/tmp/mongoinit.yml"
+  },{
+    "type": "file",
+    "source": "../vizix-tools.yml",
+    "destination": "/tmp/vizix-tools.yml"
+  },{
+    "type": "file",
+    "source": "../Caddyfile",
+    "destination": "/tmp/Caddyfile"
+  },{
+    "type": "shell",
+    "script": "../provision.sh",
+    "execute_command": "{{.Vars}} sudo -E -S bash '{{.Path}}'"
+  },{
+    "type": "shell",
+    "execute_command": "{{.Vars}} sudo -E -S bash '{{.Path}}'",
+    "inline": [
+      "mv /tmp/daemon.json /etc/docker/daemon.json",
+      "mv /tmp/docker-compose.yml /opt/vizix/docker-compose.yml",
+      "mv /tmp/mongoinit.yml /opt/vizix/mongoinit.yml",
+      "mv /tmp/vizix-tools.yml /opt/vizix/vizix-tools.yml",
+      "mv /tmp/envsample /opt/vizix/envsample",
+      "mv /tmp/Caddyfile /opt/vizix/Caddyfile",
+      "systemctl daemon-reload",
+      "systemctl stop docker",
+      "rm -rf /var/lib/docker",
+      "systemctl restart docker"
+    ]
+  },{
+    "type": "shell",
+    "script": "../launch.sh",
+    "environment_vars": [
+      "SERVICES_URL={{user `vizix_public_ip`}}",
+
+      "VIZIX_DATA_PATH=/data",
+
+      "VIZIX_SERVICES_VERSION=mojix/riot-core-services:{{user `vizix_version`}}",
+      "VIZIX_UI_VERSION=mojix/riot-core-ui:{{user `vizix_version`}}",
+      "VIZIX_BRIDGES_VERSION=mojix/riot-core-bridges:{{user `vizix_version`}}",
+      "VIZIX_TOOLS_VERSION=mojix/vizix-tools:{{user `vizix_version`}}",
+      "DOCKER_HUB_USERNAME={{user `docker_hub_username`}}",
+      "DOCKER_HUB_PASSWORD={{user `docker_hub_password`}}"
+    ],
+    "execute_command": "{{.Vars}} sudo -E -S bash '{{.Path}}'"
+  }],
+  "post-processors": [[
+    {
+      "type": "vagrant",
+      "vagrantfile_template": "vagrantfile.tpl",
+      "output": "build/vizix-{{ user `vizix_version` }}.box",
+      "only": ["virtualbox-iso"]
+    },
+    {
+      "type": "vagrant-s3",
+      "region": "us-east-1",
+      "bucket": "vizix-releases",
+      "manifest": "boxes/vizix-{{ user `vizix_version` }}.json",
+      "box_dir": "boxes/vizix",
+      "box_name": "mojix/vizix",
+      "version": "{{user `vizix_version`}}",
+      "only": ["virtualbox-iso"]
+    }
+  ]]
+}

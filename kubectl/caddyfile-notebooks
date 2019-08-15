@@ -1,0 +1,25 @@
+##########################################
+#                                        #
+#        Notebooks and Dashboards        #
+#                                        #
+##########################################
+#For kubernetes config map, execute: kubectl create configmap caddyfile-notebooks-configmap --from-file=caddyfile-notebooks
+
+
+:80 {
+    log / stdout "{remote} - {user} [{when}] \"{method} {uri} {proto}\" {status} {size} {latency}"
+    errors stderr
+    timeouts 2h
+
+    redir /notebooksapi /notebooksapi/
+    proxy /notebooksapi notebooks_api:8999 {
+      without /notebooksapi
+      transparent
+      websocket
+    }
+
+    proxy / notebooks:8888 {
+      transparent
+      websocket
+    }
+}

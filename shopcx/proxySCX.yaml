@@ -1,0 +1,39 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+configs:
+  CaddyfileSCX:
+    file: ./CaddyfileSCX
+
+services:
+
+  proxySCX:
+    image: mojix/proxy:0.10.11
+    ports:
+      - target: 8081
+        published: 8081
+        protocol: tcp
+        mode: host
+    configs:
+      - source: CaddyfileSCX
+        target: /etc/Caddyfile
+    environment:
+      - ACME_AGREE=true
+    command: --conf /etc/Caddyfile -http2=false --agree
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ###
+        tag: proxySCX

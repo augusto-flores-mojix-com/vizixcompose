@@ -1,0 +1,97 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  configuration-dashboard:
+    image: mojix/configuration-dashboard:v6.45.0
+    environment:
+      - DEV_CONFIGURATION_LOCATION_API_URL=https:// ### .vizix.io
+      - DEV_KEONN_SYNCHRO_API_URL=https:// ### .vizix.io
+      - DEV_CONFIGURATION_LOCATION_APP_URL=/configuration-dashboard/
+      - NODE_ENV=production
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ### PAPERTRAIL_LINK
+        tag: configuration-dashboard
+        
+  dashboard-epcis-search:
+    image: mojix/dashboard-epcis-search:v6.45.0
+    environment:
+      - url=https:// ### .vizix.io/
+    networks:
+      - iot 
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ## HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+       syslog-address: udp:// ##PAPERTRAIL_LINK
+       tag: dashboard-epcis-search
+
+  dp-dashboard:
+    image: mojix/dp-dashboard:v6.45.0
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ###
+        tag: dp-dashboard
+        
+  printing-dashboard:
+    image: mojix/printing-dashboard:v6.45.0
+    environment:
+      - DEV_CONFIGURATION_LOCATION_API_URL=https:// ### .vizix.io
+      - DEV_PRINTING_API_URL=https:// ### .vizix.io
+      - DEV_CONFIGURATION_LOCATION_APP_URL=/printing-dashboard/
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ###
+        tag: printing-dashboard
+        
+  statemachine-api-dashboard-configuration:
+    image: mojix/statemachine-api-dashboard-configuration:v6.45.0
+    environment:
+      - DEV_CONFIGURATION_API_URL=https:// ### <URL>
+      - DEV_CONFIGURATION_API_URL_LOCAL=https:// ### <URL>
+      - MODULE_PRINTER_DEVICE_ENABLED=true
+      - MODULE_XPT_DEVICE_ENABLED=true
+      - MODULE_POS_DEVICE_ENABLED=true
+      - MODULE_IMPORT_PN_DEVICE_ENABLED=true
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// #####
+        tag: statemachine-api-dashboard-configuration

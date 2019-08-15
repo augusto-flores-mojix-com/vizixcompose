@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    mojix.service: ui
+  name: ui
+spec:
+  replicas: 1
+  selector:
+    mojix.service: ui
+  strategy:
+    resources: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: ui
+    spec:
+      containers:
+      - env:
+        - name: VIZIX_API_HOST
+          value: rfscan.map.boeingdistribution.com
+        - name: VIZIX_API_SECURE
+          value: "1"
+        image: mojix/riot-core-ui:latest
+        name: ui
+        resources: {}
+      hostname: ui
+      restartPolicy: Always
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - ui
+        from:
+          kind: ImageStreamTag
+          name: riot-core-ui:latest
+      type: ImageChange

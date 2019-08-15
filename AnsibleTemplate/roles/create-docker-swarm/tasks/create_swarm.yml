@@ -1,0 +1,20 @@
+
+  - name: "get docker info"
+    shell: docker info
+    register: docker_info
+    changed_when: False
+  - name: "create primary swarm manager"
+  ### Azure, this also works
+#    shell: docker swarm init --advertise-addr {{ ansible_eth0['ipv4']['address'] }}
+    shell: docker swarm init --advertise-addr {{ ansible_default_ipv4['address'] }}
+    when: "docker_info.stdout.find('Swarm: inactive') != -1"
+
+  - name: "get docker swarm manager token"
+    shell: docker swarm join-token -q manager
+    register: manager_token
+  - debug: var=manager_token
+
+  - name: "get docker swarm worker token"
+    shell: docker swarm join-token -q worker
+    register: worker_token
+  - debug: var=worker_token

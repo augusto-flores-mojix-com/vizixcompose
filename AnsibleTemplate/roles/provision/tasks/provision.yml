@@ -1,0 +1,6 @@
+#- name: Sending the provision file...
+#  copy: src=provision.sh dest=/tmp/provision.sh mode=0740
+- name: Provisioning...
+  script: provision.sh
+#- name: Updating Daemon.json
+#  copy: src=daemon.json dest=/etc/docker/daemon.json

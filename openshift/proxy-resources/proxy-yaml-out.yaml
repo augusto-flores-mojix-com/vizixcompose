@@ -1,0 +1,19 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  creationTimestamp: null
+  labels:
+    mojix.service: proxy
+  name: proxy
+  selfLink: /apis/route.openshift.io/v1/namespaces/mojix/routes/proxy
+spec:
+  host: rfscan.map.boeingdistribution.com
+  port:
+    targetPort: 80
+  to:
+    kind: Service
+    name: proxy
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress: null

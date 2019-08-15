@@ -1,0 +1,190 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  vizix-dashboard-daily-count-progress:
+    image: gcr.io/mojix-registry/vizix-dashboard-daily-count-progress:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-daily-count-progress
+
+  vizix-dashboard-enterprise-accuracy-by-department:
+    image: gcr.io/mojix-registry/vizix-dashboard-enterprise-accuracy-by-department:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-enterprise-accuracy-by-department
+
+  vizix-dashboard-enterprise-accuracy-trend:
+    image: gcr.io/mojix-registry/vizix-dashboard-enterprise-accuracy-trend:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-enterprise-accuracy-trend
+
+  vizix-dashboard-enterprise-activity-monitor:
+    image: gcr.io/mojix-registry/vizix-dashboard-enterprise-activity-monitor:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-enterprise-activity-monitor
+
+  vizix-dashboard-enterprise-count-compliance:
+    image: gcr.io/mojix-registry/vizix-dashboard-enterprise-count-compliance:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-enterprise-count-compliance
+
+  vizix-dashboard-enterprise-count-monitor:
+    image: gcr.io/mojix-registry/vizix-dashboard-enterprise-count-monitor:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-enterprise-count-monitor
+
+  vizix-dashboard-enterprise-discrepancy-executive-summary:
+    image: gcr.io/mojix-registry/vizix-dashboard-enterprise-discrepancy-executive-summary:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-enterprise-discrepancy-executive-summary
+
+  vizix-dashboard-store-accuracy-trend:
+    image: gcr.io/mojix-registry/vizix-dashboard-store-accuracy-trend:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-store-accuracy-trend
+
+  vizix-dashboard-store-discrepancy-executive-summary:
+    image: gcr.io/mojix-registry/vizix-dashboard-store-discrepancy-executive-summary:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-store-discrepancy-executive-summary
+
+  vizix-dashboard-store-sku-discrepancy-outliers:
+    image: gcr.io/mojix-registry/vizix-dashboard-store-sku-discrepancy-outliers:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-store-sku-discrepancy-outliers
+
+  izix-dashboard-trend-daily-activity:
+    image: gcr.io/mojix-registry/vizix-dashboard-trend-daily-activity:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: izix-dashboard-trend-daily-activity
+
+  vizix-dashboard-trend-inventory:
+    image: gcr.io/mojix-registry/vizix-dashboard-trend-inventory:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-trend-inventory
+
+  vizix-dashboard-update-inventory:
+    image: gcr.io/mojix-registry/vizix-dashboard-update-inventory:feature_dashboardImplementation
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: vizix-dashboard-update-inventory

@@ -1,0 +1,2 @@
+- name: Launch base containers
+  shell: cd /opt/vizix && docker-compose up -d

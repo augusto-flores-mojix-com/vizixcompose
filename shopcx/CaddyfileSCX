@@ -1,0 +1,124 @@
+:8081 {
+  tls off
+  gzip
+  log / stdout "{remote} - {user} [{when}] \"{method} {uri} {proto}\" {status} {size} {latency}"
+  errors stderr
+  timeouts 2h
+
+##########################################
+#                                        #
+#             MICROSERVICES              #
+#                                        #
+##########################################
+
+  proxy /printing-api printing-api:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /serialization-api serialization-api:8080 {
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-api-aggreggates/rest dp-retroactive-event-generation:8081 {
+    without /statemachine-api-aggreggates/rest
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-api-monitoring/rest monitoring-api:8080/monitoring-api {
+    policy round_robin
+    transparent
+    without /statemachine-api-monitoring
+  }
+  proxy /tag-management-ws tag-management:8080 {
+    policy round_robin
+    transparent
+  }
+
+##########################################
+#                                        #
+#                 VIZIX                  #
+#                                        #
+##########################################
+
+  proxy /epcis-core/rest internaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+
+  proxy /product-api internaltransformer:8080 {
+    policy round_robin
+    transparent
+  }
+
+##########################################
+#                                        #
+#         REVERSE PROXY DEVICES          #
+#                                        #
+##########################################
+
+  proxy /statemachine-api-configuration reverse-proxy-devices:8081 {
+    policy round_robin
+    transparent
+  }
+  proxy /statemachine-api-supervision/rest/supervision/hub reverse-proxy-devices:8081 {
+    policy round_robin
+    transparent
+  }
+
+##########################################
+#                                        #
+#              DASHBOARDS                #
+#                                        #
+##########################################
+
+  proxy /statemachine-api-dashboard-configuration statemachine-api-dashboard-configuration:9001 {
+    policy round_robin
+    without /statemachine-api-dashboard-configuration
+    transparent
+  }
+  proxy /statemachine-api-dashboard-monitoring statemachine-api-dashboard-monitoring:9001 {
+    policy round_robin
+    transparent
+    without /statemachine-api-dashboard-monitoring
+  }
+  proxy /epcis-core dashboard-epcis-search:80 {
+    policy round_robin
+    without /epcis-core
+    transparent
+  }
+  proxy /configuration-dashboard configuration-dashboard:8080 {
+    policy round_robin
+    without /configuration-dashboard
+    transparent
+  }
+  proxy /printing-dashboard printing-dashboard:8080 {
+    policy round_robin
+    without /printing-dashboard
+    transparent
+  }
+  proxy /api nginx-api-gateway:80 {
+    transparent
+  }
+  proxy /static nginx-api-gateway:80 {
+    transparent
+  }
+  proxy /backoffice dp-dashboard:80 {
+    policy round_robin
+    transparent
+  }
+  proxy /tag-management tag-management:8080 {
+    policy round_robin
+    transparent
+  }
+
+##########################################
+#                                        #
+#          EXTERNAL SERVICES             #
+#                                        #
+##########################################
+
+  proxy /notifications https://onesignal.com/api/v1/notifications {
+    transparent
+    without /notifications
+  }
+}

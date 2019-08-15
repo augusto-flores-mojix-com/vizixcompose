@@ -1,0 +1,40 @@
+apiVersion: "apps.openshift.io/v1"
+kind: DeploymentConfig
+metadata:
+  labels:
+    mojix.service: ntpd
+  name: ntpd
+spec:
+  replicas: 1
+  selector:
+    mojix.service: ntpd
+  strategy:
+    resources: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: ntpd
+    spec:
+      containers:
+        - image: openntpd:latest
+          name: ntpd
+          restartPolicy: Always
+          volumes:
+          - emptyDir:
+              medium: Memory
+            name: ntpd-tmpfs0
+          - emptyDir:
+              medium: Memory
+            name: ntpd-tmpfs1
+      test: false
+  triggers:
+    - type: ConfigChange
+    - type: ImageChange"
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - ntpd
+        from:
+          kind: ImageStreamTag
+          name: openntpd:latest

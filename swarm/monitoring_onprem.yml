@@ -1,0 +1,117 @@
+version: "3.3"
+
+# configs:
+#   Caddyfile:
+#     file: Caddyfile_proxy_grafana
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  # caddy:
+  #   image: abiosoft/caddy:latest
+  #   ports:
+  #     - "80:80"
+  #   configs:
+  #     - source: Caddyfile 
+  #       target: /etc/Caddyfile
+  #   command: --conf /etc/Caddyfile -http2=false --agree
+    
+  grafana:
+    image: mojix/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      # /data/grafana requires chmod permissions
+      - /data/grafana:/var/lib/grafana/
+    networks:
+      - iot
+    deploy:
+      replicas: 1
+      resources:
+        reservations:
+          cpus: '0.2'
+          memory: 150M
+        limits:
+          cpus: '1'
+          memory: 200M
+      placement:
+        constraints:
+          - node.labels.host == inbound ## HOST
+
+  prometheus:
+    image: mojix/prometheus:latest
+    networks:
+      - iot
+    volumes:
+      ##/data/prometheus needs R+W root access
+      - /data/prometheus:/prometheus/
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1'
+          memory: 600M
+      placement:
+        constraints:
+          - node.labels.host == inbound ## HOST
+
+  kafka_exporter:
+    image: danielqsj/kafka-exporter:v1.0.1
+    command: --kafka.server=kafka:9092 --group.filter=.*data.* --topic.filter=.*data.*
+    networks:
+      - iot
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == inbound ## HOST
+      resources:
+        reservations:
+          cpus: '0.2'
+          memory: 150M
+        limits:
+          cpus: '0.3'
+          memory: 200M
+
+  node_exporter:
+    image: prom/node-exporter:v0.16.0
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /etc/hostname:/etc/host_hostname:ro
+    networks:
+      - iot
+    environment:
+      HOST_HOSTNAME: /etc/host_hostname
+    command: --path.procfs /host/proc --path.sysfs /host/sys --collector.textfile.directory /etc/node-exporter/ --collector.filesystem.ignored-mount-points "^/(sys|proc|dev|host|etc)($$|/)"
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  cadvisor:
+    image: google/cadvisor:v0.28.3
+    networks:
+      - iot
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    deploy:
+      mode: global
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 128M
+        reservations:
+          cpus: '0.10'
+          memory: 64M

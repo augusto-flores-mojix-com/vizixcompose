@@ -1,0 +1,20 @@
+- name: Create Vizix Directory
+  file: path=/opt/vizix state=directory
+- name: Copy Docker-compose
+  copy: src=docker-compose.yml dest=/opt/vizix/docker-compose.yml
+- name: Copy Env file
+  copy: src=envsample dest=/opt/vizix/envsample
+- name: Copy Caddyfile
+  copy: src=Caddyfile dest=/opt/vizix/Caddyfile
+- name: Copy Vizix Tools
+  copy: src=vizix-tools.yml dest=/opt/vizix/vizix-tools.yml
+- name: get public IP
+  ipify_facts:
+  register: ipify_public_ip
+- name: Set Environment Variables
+  shell: envsubst < /opt/vizix/envsample > /opt/vizix/.env
+  environment:
+    SERVICES_URL: "{{ ipify_public_ip }}"
+    VIZIX_DATA_PATH: /data
+- name: Remove temporal file envsample
+  shell: rm -f /opt/vizix/envsample

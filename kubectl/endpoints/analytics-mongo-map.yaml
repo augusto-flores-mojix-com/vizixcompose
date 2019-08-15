@@ -1,0 +1,27 @@
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  name: "mongo-analytics"
+spec:
+  ports:
+    -
+      name: "mongo-analytics"
+      protocol: "TCP"
+      port: 27017
+      targetPort: 27017
+      nodePort: 0
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  name: "mongo-analytics"
+subsets:
+  -
+    addresses:
+      -
+        ip: "172.15.0.98"
+    ports:
+      -
+        port: 27017
+        name: "mongo-analytics"

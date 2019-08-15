@@ -1,0 +1,4 @@
+- name: "Setting up Tags"
+  shell: "docker node update --label-add host={{ hostvars[item].docker_host_label }} {{ hostvars[item].ansible_hostname }}"
+  with_inventory_hostnames:
+    - hosts

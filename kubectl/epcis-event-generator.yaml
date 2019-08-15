@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: 
+  name: epciseventgenerator
+  labels:
+    mojix.service: epciseventgenerator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: epciseventgenerator
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: epciseventgenerator
+    spec:
+      containers:
+      - name: epciseventgenerator
+        imagePullPolicy: "Always"
+        resources:
+          limits:
+            memory: 1000Mi
+          requests:
+            memory: 1000Mi
+        image: mojix/vizix-epcis-event-generator:dev_6.x.x
+        env:
+          - name: MEM_XMS
+            value: "700m"
+          - name: MEM_XMX
+            value: "900m"
+          - name: KAFKA_HOST
+            value: "kafka:9092"
+          - name: KAFKA_MAX_POLL_RECORDS
+            value: "500"
+          - name: KAFKA_MAX_POLL_INTERVAL_MS
+            value: "5000"
+          - name: VIZIX_SERVER_ADDRESS
+            value: "https://"
+          - name: VIZIX_SERVER_USERNAME
+            value: "admin"
+          - name: VIZIX_SERVER_PASSWORD
+            value: "m0j1xInc!"
+          - name: EXTERNAL_TRANSFORMER_ADDRESS
+            value: "externaltransformer:8080"
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: epciseventgenerator
+      restartPolicy: Always
+

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    mojix.service: notebooks
+  name: notebooks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: notebooks
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: notebooks
+    spec:
+      containers:
+      - name: notebooks
+        image: mojix/notebooks:PENotebooks
+        env:
+        - name: DASHBOARD_SERVER_URL
+          value: "http://analytics:3000/"
+        - name: KG_ALLOW_ORIGIN
+          value: "*"
+        - name: KG_KERNEL_RETENTIONTIME
+          value: "50000"
+        resources:
+          limits:
+            memory: 2Gi
+        volumeMounts:
+          - mountPath: /opt/notebooks
+            name: notebooks-disk
+      hostname: notebooks
+      restartPolicy: Always
+      volumes:
+      - name: notebooks-disk
+        persistentVolumeClaim:
+          claimName: notebooks-disk
+      imagePullSecrets:
+        - name: mojix-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: notebooks
+  name: notebooks
+spec:
+  ports:
+  - name: "8888"
+    port: 8888
+    targetPort: 8888
+  selector:
+    mojix.service: notebooks
+status:
+  loadBalancer: {}

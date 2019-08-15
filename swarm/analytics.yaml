@@ -1,0 +1,101 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  notebooks:
+    image: mojix/notebooks:latest
+    restart: always
+    depends_on:
+      - analytics
+    environment:
+      DASHBOARD_SERVER_URL: http://analytics:3000/
+      KG_ALLOW_ORIGIN: '*'
+      KG_KERNEL_RETENTIONTIME: 50000
+    volumes:
+      - /data/analytics/notebooks:/opt/notebooks
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ## HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: notebooks
+
+  notebooks_api:
+    image: mojix/notebooks:latest
+    restart: always
+    depends_on:
+      - notebooks
+    environment:
+      API: true
+      DASHBOARD_SERVER_URL: http://analytics:3000/
+      KG_ALLOW_ORIGIN: '*'
+      KG_KERNEL_RETENTIONTIME: 50000
+    volumes:
+      - /data/analytics/notebooks:/opt/notebooks
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ## HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: notebooks_api
+
+  analytics:
+    image: mojix/dashboards:latest
+    environment:
+      PORT: 3000
+      KERNEL_GATEWAY_URL: http://notebooks:8888
+      KG_KERNEL_RETENTIONTIME: 50000
+      PUBLIC_LINK_PATTERN: https://analytics.pilot.kohls.vizixcloud.com
+      KG_AUTH_TOKEN: m0j1xAnalytics
+    restart: always
+    volumes:
+      - /data/analytics/dashboards:/srv/app/data
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ## HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: analytics
+
+  analytics-mongo:
+    image: mongo:3.4
+    command: --storageEngine wiredTiger --journal --slowms=1 --auth
+    restart: always
+    ports:
+      - target: 27017
+        published: 27020
+        protocol: tcp
+        mode: host    
+    volumes:
+      - /data/analytics/mongo:/data/db
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ## HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: analyticsmongo

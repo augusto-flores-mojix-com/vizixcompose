@@ -1,0 +1,42 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  ftpbridge:
+    image: mojix/riot-core-bridges:v6.45.0
+    environment:
+      VIZIX_BRIDGE_TYPE: agent
+      VIZIX_ESPER: 'no'
+      AB_LOGGER: stdout
+      AB_SERVICES_HTTP_HOST: services
+      AB_SERVICES_HTTP_PORT: 8080
+      AB_SERVICES_API_KEY: ## API KEY FROM VIZIX
+      VIZIX_FORCED_MAX_BATCH_PER_SEC: 500
+      AB_SERVICES_CONTEXT_PATH: /riot-core-services
+      AB_BROKER_TYPE : kafka
+      AB_KAFKA_SERVERS: kafka:9092
+      AB_AGENT_CODE: ##<TENANTCODE>
+    volumes:
+      - /data/ftp/ftpfull/timeorder:/usr/local/riot/timeOrder
+      - /data/ftp/persistedFiles:/persistedFiles
+    networks:
+      - iot
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '0.5'
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: ftpbridge

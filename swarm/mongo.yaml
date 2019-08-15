@@ -1,0 +1,44 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  mongo:
+    image: mongo:4.0.3
+    ports:
+      - target: 27017
+        published: 27017
+        protocol: tcp
+        mode: host
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+      resources:
+        limits:
+          memory: 8g
+    command:
+      - --storageEngine=wiredTiger
+      - --journal
+      - --slowms=5000
+      - --profile=1
+      - --cpu
+      - --dbpath=/data/db
+      - --directoryperdb
+      - --wiredTigerCacheSizeGB=4
+      - --wiredTigerDirectoryForIndexes
+      - --bind_ip_all
+#      - --auth
+    volumes:
+      - /data/mongo:/data/db
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: mongo

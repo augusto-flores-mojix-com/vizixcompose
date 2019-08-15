@@ -1,0 +1,22 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "mojix/vizix"
+  config.vm.box_url = "#### URL"
+
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 8192 # 1024 = 1GB RAM / Change to needed RAM
+    v.cpus = 2 # Number of CPU cores to use / Change to needed Cores
+  end
+
+  config.vm.provision "shell" do |s|
+    s.inline = 'sed -i "1s/.*/SERVICES_URL=$1/" /opt/vizix/.env && cd /opt/vizix/ && docker-compose up -d ui'
+    s.args   = ["192.168.50.10"] # Change this ip with your public or internal ip
+  end
+
+  # Port forwarding for UI, Services, Flow, Logio, ALEBridge
+  config.vm.network "forwarded_port", guest: 80, host: 80
+  config.vm.network "forwarded_port", guest: 8080, host: 8080
+  config.vm.network "forwarded_port", guest: 1880, host: 1880
+  config.vm.network "forwarded_port", guest: 28778, host: 28778
+  config.vm.network "forwarded_port", guest: 9090, host: 9090
+  config.vm.network "forwarded_port", guest: 123, host: 123
+end

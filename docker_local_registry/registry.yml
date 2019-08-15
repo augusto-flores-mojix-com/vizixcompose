@@ -1,0 +1,62 @@
+version: "3.3"
+
+networks:
+  registry:
+    driver: weave:latest
+
+secrets:
+  mirror_config.yml:
+    file: mirror_config.yml
+  registry_config.yml:
+    file: registry_config.yml
+
+services:
+
+  redis-registry:
+    image: redis:4-alpine
+    command: redis-server --appendonly yes
+    deploy:
+      replicas: 1
+    networks:
+      - registry
+    volumes:
+      - /data/redis-registry:/data
+
+  redis-mirror:
+    image: redis:4-alpine
+    command: redis-server --appendonly yes
+    deploy:
+      replicas: 1
+    networks:
+      - registry
+    volumes:
+      - /data/redis-mirror:/data
+
+  registry:
+    image: registry:2.6
+    networks:
+      - registry
+    deploy:
+      replicas: 1
+    ports:
+      - 9000:5000
+    secrets:
+      - source: registry_config.yml
+        target: /etc/docker/registry/config.yml
+    volumes:
+      - /data/registry:/var/lib/registry
+
+  registry-mirror:
+    image: registry:2.6
+    networks:
+      - registry
+    deploy:
+      replicas: 1
+    ports:
+      - 80:5000
+      - 8000:5000
+    secrets:
+      - source: mirror_config.yml
+        target: /etc/docker/registry/config.yml
+    volumes:
+      - /data/registry-mirror:/var/lib/registry

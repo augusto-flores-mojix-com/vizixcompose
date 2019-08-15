@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    mojix.service: actionprocessor
+  name: actionprocessor
+spec:
+  replicas: 1
+  selector:
+    mojix.service: actionprocessor
+  strategy:
+    resources: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: actionprocessor
+    spec:
+      containers:
+      - env:
+        - name: VIZIX_BRIDGE_TYPE
+          value: actionprocessor
+        - name: VIZIX_KAFKA_SERVERS
+          value: kafka:9092
+        image: mojix/riot-core-bridges
+        name: actionprocessor
+        resources: {}
+      hostname: actionprocessor
+      restartPolicy: Always
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - actionprocessor
+        from:
+          kind: ImageStreamTag
+          name: riot-core-bridges:latest
+      type: ImageChange

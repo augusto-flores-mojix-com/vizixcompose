@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: <namespace>
+  name: sohgenerator
+  labels:
+    mojix.service: sohgenerator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: sohgenerator
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: sohgenerator
+    spec:
+      containers:
+      - name: sohgenerator
+        resources:
+          limits:
+            memory: 1000Mi
+          requests:
+            memory: 1000Mi
+        image: mojix/sohgenerator:develop
+        imagePullPolicy: "Always"
+        env:
+          - name: VIZIX_HTTP_BRIDGE_REAL
+            value: "http://httpb:8080/http-bridge"
+          - name: VIZIX_MONGO_PRIMARY
+            value: "<mongo1>:27017"
+          - name: VIZIX_MONGO_SECONDARY
+            value: "<mongo2>:27017,<mongo3>:27017"
+          - name: VIZIX_MONGO_AUTHDB
+            value: "admin"
+          - name: VIZIX_MONGO_DB
+            value: "viz_root"
+          - name: VIZIX_MONGO_USERNAME
+            value: "admin"
+          - name: VIZIX_MONGO_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: vizix-secrets
+                key: mongo-password
+          - name: VIZIX_MONGO_REPLICASET
+            value: "shard0"
+          - name: VIZIX_MONGO_SSL
+            value: "true"
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: sohgenerator
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: <namespace>
+  labels:
+    mojix.service: sohgenerator
+  name: sohgenerator
+spec:
+  ports:
+  - name: "8080"
+    port: 8080
+    targetPort: 8080
+  type: LoadBalancer
+  selector:
+    mojix.service: sohgenerator
+status:
+  loadBalancer: {}

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    mojix.service: proxy-analytics
+  name: proxy-analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: proxy-analytics
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: proxy-analytics
+    spec:
+      containers:
+      - args:
+        - --conf
+        - /etc/caddyfile-analytics
+        - -http2=false
+        image: mojix/proxy:0.10.11
+        name: proxy-analytics
+        ports:
+        - containerPort: 80
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/caddyfile-analytics
+          name: caddyfile-analytics-configmap
+          subPath: caddyfile-analytics
+          readOnly: true
+      hostname: proxy-analytics
+      restartPolicy: Always
+      volumes:
+      - name: caddyfile-analytics-configmap
+        configMap:
+          name: caddyfile-analytics-configmap
+      imagePullSecrets:
+        - name: mojix-registry
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: proxy-analytics
+  name: proxy-analytics
+spec:
+  ports:
+  - name: "80"
+    port: 80
+    targetPort: 80
+  selector:
+    mojix.service: proxy-analytics
+status:
+  loadBalancer: {}

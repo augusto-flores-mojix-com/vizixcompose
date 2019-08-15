@@ -1,0 +1,139 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: 
+  labels:
+    mojix.service: externaltransformer
+  name: externaltransformer
+spec:
+  ports:
+  - name: "8080"
+    port: 8080
+    targetPort: 8080
+  selector:
+    mojix.service: externaltransformer
+status:
+  loadBalancer: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: 
+  name: externaltransformer
+  labels:
+    mojix.service: externaltransformer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: externaltransformer
+  template:
+    metadata:
+      namespace: 
+      creationTimestamp: null
+      labels:
+        mojix.service: externaltransformer
+    spec:
+      containers:
+      - name: externaltransformer
+        imagePullPolicy: "Always"
+        resources:
+          limits:
+            memory: 3500Mi
+          requests:
+            memory: 3000Mi
+        image: mojix/vizix-api-transformer:canary_6.58.x
+        env:
+          - name: CLUSTER_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.uid
+          - name: MEM_XMS
+            value: "3000m"
+          - name: MEM_XMX
+            value: "3000m"
+          ## RabbitMQ Connection
+          - name: VIZIX_MONGO_MAX_POOL_SIZE
+            value: "100"
+          - name: VIZIX_AMQP_CONNECTION_URI
+            value: "amqp://admin@shopcx-rabbitmq:5672"
+          - name: VIZIX_AMQP_CONNECTION_PASSWORD
+            value: "dhUhLADa5c8AxEmu"
+          - name: VIZIX_AMQP_HUB_EVENT_QUEUE_NAME
+            value: "statemachine_jsonEpcis_input_queue"
+          - name: VIZIX_AMQP_HUB_TENANT
+            value: "RED"
+          ## API Connection
+          - name: VIZIX_API
+            value: "http://proxy-mojix:80/riot-core-services/api"
+          - name: VIZIX_HTTP_BRIDGE
+            value: "http://hbridge:8080/http-bridge/v1/data0/"
+          - name: VIZIX_HTTP_BRIDGE_REAL
+            value: "http://hbridge:8080/http-bridge"
+          - name: VIZIX_CXI_API
+            value: "http://proxy-scx:8081"
+          - name: VIZIX_ROOT_API_KEY
+            value: "HWZJX8IMGS"
+          - name: VIZIX_HTTP_BRIDGE_BATCH_SIZE
+            value: "500"
+          - name: VIZIX_TOPIC_JSON2
+            value: "/v2/data0/json"
+          - name: VIZIX_RFL_EVICTION_TIMEOUT
+            value: 20
+          - name: VIZIX_TRANSFORMER_CONNECT_TIMEOUT
+            value: 900
+          - name: VIZIX_TRANSFORMER_READ_TIMEOUT
+            value: 900
+          ## Mongo stuff
+          - name: VIZIX_MONGO_PRIMARY
+            valueFrom:
+              configMapKeyRef:
+                name: infrastructure-config
+                key: mongo.atlas.primary
+          - name: VIZIX_MONGO_SECONDARY
+            valueFrom:
+              configMapKeyRef:
+                name: infrastructure-config
+                key: mongo.atlas.secondary
+          - name: VIZIX_MONGO_AUTHDB
+            value: "admin"
+          - name: VIZIX_MONGO_DB
+            value: "viz_root"
+          - name: VIZIX_MONGO_USERNAME
+            value: "admin"
+          - name: VIZIX_MONGO_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: vizix-secrets
+                key: mongo-password
+          - name: VIZIX_MONGO_REPLICASET
+            valueFrom:
+              configMapKeyRef:
+                name: infrastructure-config
+                key: mongo.atlas.replicaset
+          - name: VIZIX_MONGO_SSL
+            value: "true"
+          - name: VIZIX_MONGO_ATLAS_ENVIRONMENT
+            value: "true"
+          - name: VIZIX_MONGO_ATLAS_CLOUD
+            valueFrom:
+              configMapKeyRef:
+                name: infrastructure-config
+                key: mongo.atlas.cloud
+          - name: VIZIX_MONGO_ATLAS_USER
+            valueFrom:
+              secretKeyRef:
+                name: vizix-secrets
+                key: mongo-atlas-user
+          - name: VIZIX_MONGO_ATLAS_APIKEY
+            valueFrom:
+              secretKeyRef:
+                name: vizix-secrets
+                key: mongo-atlas-apikey
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: externaltransformer
+      restartPolicy: Always
+

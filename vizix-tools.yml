@@ -1,0 +1,70 @@
+version: "2.3"
+services:
+
+  vizix-tools:
+    image: ${VIZIXTOOLS}
+    command: configure
+    volumes:
+      - ${VIZIX_DATA_PATH}/services:/data
+    environment:
+
+    #Installation Variables
+      VIZIX_SYSCONFIG: "true"
+      VIZIX_SYSCONFIG_OPTION: platform-core-root
+      VIZIX_SYSCONFIG_TENANT_NAME: MojixInc
+      VIZIX_SYSCONFIG_TENANT_CODE: MOJIX
+      VIZIX_SYSCONFIG_HIERARCHY: ">MOJIX" # Fill it with the Tenant Name instead of MOJIX
+      VIZIX_SYSCONFIG_CREATE_TENANT: "true"
+      VIZIX_SYSCONFIG_CREATE_THINGS: "true"
+    #Set to false when SysConfig is incremental
+      VIZIX_SYSCONFIG_CLEAN: "true"
+
+    #Kafka Enabled
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}
+      VIZIX_KAFKA_ZOOKEEPER: ${ZOOKEEPER_ADDRESS}
+      VIZIX_KAFKA_CREATE_TOPICS: "true"
+      VIZIX_KAFKA_LOAD_CACHE: "true"
+      #VIZIX_KAFKA_LOAD_CACHE_GROUP_FQN: "/"
+      VIZIX_KAFKA_DATA_PARTITIONS: 24
+      VIZIX_KAFKA_DATA_RETENTION_UPDATER: "true"
+      VIZIX_KAFKA_DATA_RETENTION_BYTES: 1073741824
+      VIZIX_KAFKA_DATA_RETENTION_HOURS: 2
+      VIZIX_KAFKA_DATA_REPLICA_FACTOR: 1
+      VIZIX_SITE_CONFIG: "true"
+      #VIZIX_KAFKA_DESCRIBE_TOPICS: "false" Summary Logs
+
+    #MONGODB Parameters
+      VIZIX_MONGO_PRIMARY: ${MONGO_HOST}:27017
+      VIZIX_MONGO_AUTHDB: admin
+      VIZIX_MONGO_DB: ${VIZIX_MONGO_DB}
+      VIZIX_MONGO_USERNAME: ${VIZIX_MONGO_USERNAME}
+      VIZIX_MONGO_PASSWORD: ${VIZIX_MONGO_PASSWORD}
+     # VIZIX_MONGO_SECONDARY: ''
+     # VIZIX_MONGO_REPLICASET: ''
+     # VIZIX_MONGO_SSL: 'false'
+     # VIZIX_MONGO_CONTROL_READPREFERENCE: 'primary'
+     # VIZIX_MONGO_REPORTS_READPREFERENCE: 'secondary'
+     # VIZIX_MONGO_SHARDING: 'false'
+     # VIZIX_MONGO_CONNECTION_TIMEOUT: 0
+     # VIZIX_MONGO_MAX_POOL_SIZE: 0
+
+    #MQTT Broker Parameters
+      VIZIX_MQTT_HOST: mqtt
+      VIZIX_MQTT_PORT: 1883
+    #SQLDB Parameters
+      VIZIX_DB_DRIVER: com.mysql.jdbc.Driver
+      VIZIX_DB_DIALECT: org.hibernate.dialect.MySQLDialect
+      VIZIX_DB_DATABASE: ${VIZIX_DB_DATABASE}
+      VIZIX_DB_PASSWORD: ${VIZIX_DB_PASSWORD}
+      VIZIX_AUTHENTICATION_MODE: nativeAuthentication
+      VIZIX_CONNECTION_URL: jdbc:mysql://${DB_HOST}:3306/riot_main?useSSL=false
+
+    #SERVICES Connection
+      VIZIX_API_PORT: 8080
+      VIZIX_API_HOST: services
+      VIZIX_API_KEY: 7B4BCCDC
+      VIZIX_API_PATH: /riot-core-services
+
+    #HAZELCAST Parameters
+      VIZIX_HAZELCAST_DISTRIBUTED_ENABLE: "false"
+      VIZIX_HAZELCAST_NATIVE_CLIENT_ADDRESS: hazelcast

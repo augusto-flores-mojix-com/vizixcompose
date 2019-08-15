@@ -1,0 +1,35 @@
+# kubectl create secret tls aks-ingress-tls \
+#    --key $KEY \
+#    --cert $CERT
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: vizix-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Cors
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Origin, X-Requested-With, Content-Type, Accept, clientid, token, Access-Control-Allow-Credentials, Access-Control-Allow-Headers, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Origin, Api-Key"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS, HEAD"
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: "300"
+
+spec:
+  tls:
+  - hosts:
+    - www.mojix.io
+    secretName: mojix-io-ingress-tls
+  rules:
+  - host: www.mojix.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: proxy
+          servicePort: 80

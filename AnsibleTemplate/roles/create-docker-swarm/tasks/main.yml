@@ -1,0 +1,7 @@
+---
+# tasks file for roles/create-docker-swarm
+- name: Create Docker Swarm First Node
+  import_tasks: create_swarm.yml
+- name: Print Tokens
+  debug:
+    msg: "###TOKENS#### Manager: {{ manager_token }} Worker: {{ worker_token }}"

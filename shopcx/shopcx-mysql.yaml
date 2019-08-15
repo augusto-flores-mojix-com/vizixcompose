@@ -1,0 +1,38 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  shopcx-mysql:
+    image: mysql:5.7
+    ports:
+    - 3307:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ###
+    volumes:
+    - /data/shopcx-mysql/data:/var/lib/mysql
+    command:
+    - --max_allowed_packet=1024M
+    - --max_connections=7000
+    - --interactive_timeout=3600
+    - --wait_timeout=3600
+    - --lower_case_table_names=1
+    - --net_write_timeout=3600
+    - --net_read_timeout=3600
+    - --innodb_lock_wait_timeout=600
+    - --skip-name-resolve
+    - --innodb_thread_sleep_delay=60000000
+    - --default-authentication-plugin=mysql_native_password
+    - --character-set-server=utf8
+    - --collation-server=utf8_bin
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###
+

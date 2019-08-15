@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tiller
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tiller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: tiller
+    namespace: kube-system
+
+### Create a NGINX Controller
+# kubectl apply -f helm-rbac.yaml
+# helm init
+# helm search
+# helm install stable/nginx-ingress --namespace $NAMESPACE --set controller.replicaCount=2 --set controller.config.proxy-body-size=500M --set controller.config.proxy-connect-timeout=5m --set controller.config.proxy-read-timeout=60m --set controller.config.proxy-write-timeout=60m

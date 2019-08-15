@@ -1,0 +1,6 @@
+- name: Pull Images
+  shell: cd /opt/vizix && docker-compose pull
+- name: Pull Images from Vizix Tools
+  shell: cd /opt/vizix && docker-compose -f vizix-tools.yml pull
+- name: Launch base containers
+  shell: cd /opt/vizix && docker-compose up -d mongo mysql mqtt zookeeper kafka

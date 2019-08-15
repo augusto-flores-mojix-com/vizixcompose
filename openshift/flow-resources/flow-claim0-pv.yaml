@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: flow-claim0 
+spec:
+  capacity:
+    storage: 2Gi 
+  accessModes:
+  - ReadWriteOnce 
+  nfs: 
+    path: /apps/exports/mojix/flows-vol
+    server: dclpcmpa01
+  persistentVolumeReclaimPolicy: Retain

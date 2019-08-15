@@ -1,0 +1,35 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  tagit:
+    image: mojix/vizixtagcommissioning:retail
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: host
+    environment:
+      - VIZIX_PASSWORD= ## VIZIX_PASSWORD
+      - VIZIX_CONFIG_FILENAME=TAGPEOPLE001
+      - VIZIX_API_HOST= ##example.vizixcloud.com
+      - VIZIX_TC_HOST= ##example.vizixcloud.com
+      - VIZIX_USERNAME=root
+      - VIZIX_HTTPS=true
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: tagit

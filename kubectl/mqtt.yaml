@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt
+  labels:
+    mojix.service: mqtt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: mqtt
+#    matchLabels:
+#      app: ui
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: mqtt
+    spec:
+      containers:
+      - name: mqtt
+        resources:
+          limits:
+            memory: 2Gi
+        image: mojix/emqtt:2.2.0
+#        ports:
+#       - containerPort: 80
+        env:
+          - name: EMQ_MQTT__CLIENT__ENABLE_STATS
+            value: "on"
+          - name: EMQ_MQTT__SESSION__ENABLE_STATS
+            value: "on"
+          - name: EMQ_MQTT__MAX_PACKET_SIZE
+            value: "1024000KB"
+          - name: EMQ_MQTT__SESSION__MAX_INFLIGHT
+            value: "1"
+          - name: EMQ_MQTT__CLIENT__IDLE_TIMEOUT
+            value: "120s"
+          - name: EMQ_MQTT__SESSION__EXPIRY_INTERVAL
+            value: "5s"
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: mqtt
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: mqtt
+  name: mqtt
+spec:
+  ports:
+  - name: "1883"
+    port: 1883
+    targetPort: 1883
+  selector:
+    mojix.service: mqtt
+status:
+  loadBalancer: {}

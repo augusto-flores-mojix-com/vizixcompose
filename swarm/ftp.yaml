@@ -1,0 +1,50 @@
+version: "3.4"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  sftp:
+    image: atmoz/sftp
+    networks:
+      - iot
+    ports:
+      - 2200:22
+    volumes:
+      - /data/sftp/users.conf:/etc/sftp/users.conf:ro
+      - /data/sftp/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key
+      - /data/sftp/ssh_host_rsa_key:/etc/ssh/ssh_host_rsa_key
+      - /data/sftp/home:/home
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host== ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: "sftp"
+
+  ftp:
+    image: stilliard/pure-ftpd:latest
+    networks:
+      - iot
+    ports:
+      - "21:21"
+      - "30100-30150:30100-30150"
+    command: /run.sh -l puredb:/etc/pure-ftpd/pureftpd.pdb -S 21 -E -j -R -P ftp -p 30100:30150 -C 20 -c 50 -O w3c:/var/log/pure-ftpd/transfer.log -d --tls=0
+    volumes:
+      - /data/sftp/passwd:/etc/pure-ftpd/passwd
+      - /data/sftp/home:/home/ftpusers
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host== ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: "ftp"

@@ -1,0 +1,4 @@
+- hosts: provision
+  roles:
+    - { role: provision }
+  become: yes

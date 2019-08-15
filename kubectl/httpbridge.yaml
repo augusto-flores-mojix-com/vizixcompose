@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hbridge
+  labels:
+    mojix.service: hbridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: hbridge
+#    matchLabels:
+#      app: ui
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: hbridge
+    spec:
+      containers:
+      - name: hbridge
+        resources:
+          limits:
+            memory: 4Gi
+        image: mojix/riot-core-bridges:v6.37.0
+#        ports:
+#       - containerPort: 80
+        env:
+          - name: MEM_XMS
+            value: "3g"
+          - name: MEM_XMX
+            value: "3g"
+          - name: VIZIX_BRIDGE_TYPE
+            value: "httpbridge"
+          - name: VIZIX_KAFKA_SERVERS
+            value: "kafka1:9092,kafka2:9092,kafka3:9092"
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: hbridge
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: hbridge
+  name: hbridge
+spec:
+  ports:
+  - name: "8080"
+    port: 8080
+    targetPort: 8080
+  selector:
+    mojix.service: hbridge
+status:
+  loadBalancer: {}

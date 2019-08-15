@@ -1,0 +1,5 @@
+- hosts: restore-mongo
+  roles:
+    - { role: create-mongo-user }
+    - { role: restore-mongo }
+  become: yes

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: actionprocessor
+  labels:
+    mojix.service: actionprocessor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: actionprocessor
+#    matchLabels:
+#      app: ui
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: actionprocessor
+    spec:
+      containers:
+      - name: actionprocessor
+        resources:
+          limits:
+            memory: 4Gi
+        image: mojix/riot-core-bridges:v6.37.0
+#        ports:
+#       - containerPort: 80
+        env:
+          - name: MEM_XMS
+            value: "3g"
+          - name: MEM_XMX
+            value: "3g"
+          - name: VIZIX_BRIDGE_TYPE
+            value: "actionprocessor"
+          - name: VIZIX_KAFKA_SERVERS
+            value: "kafka1:9092,kafka2:9092,kafka3:9092"
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: actionprocessor
+      restartPolicy: Always

@@ -1,0 +1,84 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+configs:
+  CaddyfileKibana:
+    file: ./CaddyfileKibana
+
+services:
+
+  shopcx-kibana:
+    image: docker.elastic.co/kibana/kibana:5.4.0
+    environment:
+      ELASTICSEARCH_URL: http://shopcx-elasticsearch-monitoring:9200
+      SERVER_NAME: shopcx-kibana
+    networks:
+      - iot
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ####
+        tag: shopcx-kibana
+
+  proxyKibana:
+    image: mojix/proxy:0.10.11
+    ports:
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+    configs:
+      - source: CaddyfileKibana
+        target: /etc/Caddyfile
+    command: --conf /etc/Caddyfile -http2=false
+    # If TLS deploy
+    #volumes:
+    #  - /data/caddy:/root/.caddy
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ####
+        tag: proxy-kibana
+
+  shopcx-elasticsearch-monitoring:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.0
+    environment:
+      cluster.name: docker-cluster
+      xpack.security.enabled: 'false'
+    volumes:
+      - /elasticsearch/shopcx-es:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - iot
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ####
+        tag: elasticsearch-monitoring

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: m2k
+  labels:
+    mojix.service: m2k
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: m2k
+#    matchLabels:
+#      app: ui
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: m2k
+    spec:
+      containers:
+      - name: m2k
+        resources:
+          limits:
+            memory: 4Gi
+        image: mojix/riot-core-bridges:v6.37.0
+#        ports:
+#       - containerPort: 80
+        env:
+          - name: VIZIX_MQTTHOST
+            value: "mqtt"
+          - name: VIZIX_BRIDGE_TYPE
+            value: "m2kbridge"
+          - name: VIZIX_KAFKA_SERVERS
+            value: "kafka1:9092,kafka2:9092,kafka3:9092"
+      imagePullSecrets:
+        - name: mojix-registry
+      hostname: m2k
+      restartPolicy: Always

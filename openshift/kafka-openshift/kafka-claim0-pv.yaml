@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kafka-claim0 
+spec:
+  capacity:
+    storage: 50Gi 
+  accessModes:
+  - ReadWriteOnce 
+  nfs: 
+    path: /apps/exports/mojix/kafka-vol 
+    server: dclpcmpa01
+  persistentVolumeReclaimPolicy: Retain

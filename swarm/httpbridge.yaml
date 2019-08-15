@@ -1,0 +1,32 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  hbridge:
+    image: mojix/riot-core-bridges:v6.45.0
+    environment:
+      MEM_XMS: 1g
+      MEM_XMX: 1g
+      VIZIX_BRIDGE_TYPE: httpbridge
+      VIZIX_KAFKA_SERVERS: kafka:9092
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      resources:
+        limits:
+          memory: 2g
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: httpbridge

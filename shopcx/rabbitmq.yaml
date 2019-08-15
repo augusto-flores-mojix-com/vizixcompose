@@ -1,0 +1,29 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  shopcx-rabbitmq:
+    image: rabbitmq:3.7.7-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: ##PASS
+      HOSTNAME: shopcx-rabbitmq
+ #   ports:
+ #   - "5672:5672"
+ #   - "5671:5671" For secure connections
+    - "15672:15672"
+    volumes:
+    - /data/rabbitmq/data:/var/lib/rabbitmq
+    - /data/rabbitmq/conf/enabled_plugins:/etc/rabbitmq/enabled_plugins
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == #host
+          

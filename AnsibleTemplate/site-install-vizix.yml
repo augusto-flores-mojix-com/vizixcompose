@@ -1,0 +1,14 @@
+- hosts: install
+  vars_prompt:
+    - name: "docker_user"
+      prompt: "Docker Hub Username"
+      default: "mojixpull"
+      private: no
+    - name: "docker_pass"
+      prompt: "Docker Hub Password"
+      private: yes
+  roles:
+# Uncomment this line to provision and install vizix
+#    - { role: provision }
+    - { role: launch-vizix }
+  become: yes

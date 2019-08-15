@@ -1,0 +1,28 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  ui:
+    image: mojix/riot-core-ui:v6.45.0
+    environment:
+      VIZIX_API_HOST: ##URL
+      VIZIX_API_SECURE: 0
+      #VIZIX_SERVER_LOCATION: "America Central US"
+      #VIZIX_OVERRIDE_VERSION_LABEL: ""
+    networks:
+      - iot
+    healthcheck:
+      disable: true
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: ui

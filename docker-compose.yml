@@ -1,0 +1,389 @@
+version: "2.3"
+services:
+
+  logs:
+    image: ${LOGS}
+    restart: always
+    hostname: logs
+    container_name: logs
+    command: -h logio -n docker
+    read_only: true
+    #mem_limit: 512m
+    depends_on:
+      - logio
+      - services
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  logio:
+    hostname: logio
+    restart: always
+    container_name: logio
+    image: ${LOGIO}
+    read_only: true
+    #cpu_count: 1
+    #mem_limit: 1g
+
+  ntpd:
+    hostname: ntpd
+    container_name: ntpd
+    image: ${NTPD}
+    command: ntpd -d -f /etc/ntp-client.conf
+    restart: always
+    #cpu_count: 1
+    #mem_limit: 20m
+    cap_add:
+      - SYS_NICE
+      - SYS_TIME
+    tmpfs:
+      - /var/run:rw,noexec,nosuid,size=1m
+      - /var/db:rw,noexec,nosuid,size=8m
+
+  ntpdserver:
+    hostname: ntpdserver
+    container_name: ntpdserver
+    image: ${NTPD}
+    restart: always
+    #cpu_count: 1
+    #mem_limit: 20m
+    cap_add:
+      - SYS_NICE
+      - SYS_TIME
+    tmpfs:
+      - /var/run:rw,noexec,nosuid,size=1m
+      - /var/db:rw,noexec,nosuid,size=8m
+    ports:
+      - 123:123/udp
+
+  mqtt:
+    image: ${MQTT}
+    ports:
+      - 1883:1883
+      - 18083:18083
+    restart: always
+    hostname: mqtt
+    container_name: mqtt
+    environment:
+      - EMQ_MQTT__CLIENT__ENABLE_STATS=on
+      - EMQ_MQTT__SESSION__ENABLE_STATS=on
+      - EMQ_MQTT__MAX_PACKET_SIZE=512000KB
+      - EMQ_MQTT__SESSION__MAX_INFLIGHT=1000
+      - EMQ_MQTT__CLIENT__IDLE_TIMEOUT=120s
+      - EMQ_MQTT__MQUEUE__MAX_LENGTH=0
+      - EMQ_LISTENER__API__MGMT=0.0.0.0:18080
+      - EMQ_MQTT__SESSION__EXPIRY_INTERVAL=5s
+    #cpu_count: 1
+    #mem_reservation: 256m
+    #mem_limit: 1g
+
+  mongo:
+    image: ${MONGO}
+    ports:
+      - 27017:27017
+    restart: always
+    hostname: mongo
+    container_name: mongo
+    #mem_reservation: 1g
+    #wiredTiger at 2GB
+    command:
+      - --storageEngine=wiredTiger
+      - --journal
+      - --slowms=5000
+      - --profile=1
+      - --cpu
+      - --dbpath=/data/db
+      - --directoryperdb
+      - --wiredTigerCacheSizeGB=4
+      - --wiredTigerDirectoryForIndexes
+      - --bind_ip_all
+#      - --auth
+    volumes:
+      - ${VIZIX_DATA_PATH}/mongo:/data/db
+
+#  hazelcast:
+#    restart: always
+#    hostname: hazelcast
+#    container_name: hazelcast
+#    #cpu_count: 1
+#    #mem_reservation: 512m
+#    #mem_limit: 1g
+#    image: ${HAZELCAST}
+#    environment:
+#      MEM_XMS: 768m
+#      MEM_XMX: 1g
+#      VIZIX_HAZELCAST_PUBLIC_ADDRESS: hazelcast
+#      VIZIX_HAZELCAST_MEMBER_LIST: hazelcast
+
+  mysql:
+    image: ${MYSQL}
+    ports:
+      - 3306:3306
+    restart: always
+    hostname: mysql
+    container_name: mysql
+    #mem_reservation: 512m
+    command: 
+      - --max_allowed_packet=1024M 
+      - --max_connections=7000 
+      - --interactive_timeout=3600 
+      - --wait_timeout=3600 
+      - --lower_case_table_names=0 
+      - --net_write_timeout=3600 
+      - --net_read_timeout=3600 
+      - --innodb_lock_wait_timeout=600 
+      - --skip-name-resolve 
+      - --innodb_thread_sleep_delay=60000000 
+      - --default-authentication-plugin=mysql_native_password 
+      - --character-set-server=utf8 
+      - --collation-server=utf8_bin
+    volumes:
+      - ${VIZIX_DATA_PATH}/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${VIZIX_DB_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${VIZIX_DB_PASSWORD}
+
+  services:
+    restart: always
+    depends_on:
+      - mqtt
+      - mongo
+      - mysql
+    hostname: services
+    container_name: services
+    #mem_reservation: 4g
+    image: ${SERVICES}
+    environment:
+      - MEM_XMS=2g
+      - MEM_XMX=4g
+      - VIZIX_MONGO_PRIMARY=${MONGO_HOST}:27017
+      - VIZIX_MONGO_DB=${VIZIX_MONGO_DB}
+      - VIZIX_MONGO_USERNAME=${VIZIX_MONGO_USERNAME}
+      - VIZIX_MONGO_PASSWORD=${VIZIX_MONGO_PASSWORD}
+      - VIZIX_MQTT_HOST=mqtt
+      - VIZIX_CONNECTION_URL=jdbc:mysql://${DB_HOST}:3306/${VIZIX_DB_DATABASE}?useSSL=false&amp;characterEncoding=UTF-8
+      - VIZIX_DB_SCHEMA=${VIZIX_DB_DATABASE}
+      - VIZIX_DB_DRIVER=com.mysql.jdbc.Driver
+      - VIZIX_DB_DIALECT=org.hibernate.dialect.MySQLDialect
+      - VIZIX_DB_PASSWORD=${VIZIX_DB_PASSWORD}
+      - VIZIX_HAZELCAST_DISTRIBUTED_ENABLE=false
+      - VIZIX_HAZELCAST_NATIVE_CLIENT_ADDRESS=hazelcast
+      - VIZIX_AUTHENTICATION_MODE=nativeAuthentication
+      - VIZIX_BROKER_CONNECTION_WAIT=false
+      #KAFKA Settings
+      - VIZIX_KAFKA_ENABLED=true
+      - VIZIX_KAFKA_ZOOKEEPER=${ZOOKEEPER_ADDRESS}
+      - VIZIX_KAFKA_SERVERS=${KAFKA_ADDRESS}
+      - VIZIX_HOME_SERVICES=/jar
+    volumes:
+      - ${VIZIX_DATA_PATH}/endorsed:/usr/local/tomcat/endorsed
+      - ${VIZIX_DATA_PATH}/services/data:/data
+
+  ui:
+    image: ${UI}
+    restart: always
+    hostname: ui
+    container_name: ui
+    #cpu_count: 1
+    #mem_reservation: 768m
+    #mem_limit: 1g
+    environment:
+      VIZIX_API_HOST: ${SERVICES_URL}
+      VIZIX_API_SECURE: 0
+      #VIZIX_OVERRIDE_VERSION_LABEL: ""
+
+  proxy:
+    image: ${PROXY}
+    ports:
+      - 80:80
+    restart: always
+    hostname: proxy
+    container_name: proxy
+    #cpu_count: 1
+    #mem_reservation: 1g
+    command: --conf /etc/Caddyfile -http2=false
+    volumes:
+      - ./Caddyfile:/etc/Caddyfile:ro
+      - ${VIZIX_DATA_PATH}/caddy:/root/.caddy
+
+  flow:
+    image: ${FLOW}
+    restart: always
+    hostname: flow
+    container_name: flow
+    volumes:
+      - ${VIZIX_DATA_PATH}/flows:/flows
+    #environment:
+      #- MAX_OLD_SPACE=8192
+    #cpu_count: 1
+    #mem_reservation: 1g
+
+### Kafka and Zookeeper Containers
+
+  kafka:
+    image: ${KAFKA}
+    container_name: kafka
+    hostname: kafka
+    restart: always
+    environment:
+      KAFKA_MAX_MEMORY: 6g
+      KAFKA_MIN_MEMORY: 4g
+      KAFKA_PARAM_BROKER_ID: 1
+      KAFKA_PARAM_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_PARAM_LISTENERS: PLAINTEXT://:9092
+      KAFKA_PARAM_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS}
+      KAFKA_PARAM_OFFSETS_RETENTION_MINUTES: '10080'
+      KAFKA_PARAM_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT}
+      KAFKA_PARAM_LOG_RETENTION_HOURS: 12
+      KAFKA_PARAM_LOG_RETENTION_BYTES: 1073741824
+    depends_on:
+      - zookeeper
+    volumes:
+      - ${VIZIX_DATA_PATH}/kafka:/data
+    ports:
+      - 9092:9092
+    logging:
+      options:
+        max-size: 1g
+
+  zookeeper:
+    image: ${ZOOKEEPER}
+    container_name: zookeeper
+    hostname: zookeeper
+    restart: always
+    ports:
+      - 2181:2181
+    volumes:
+      - ${VIZIX_DATA_PATH}/zookeeper/data:/data
+      - ${VIZIX_DATA_PATH}/zookeeper/datalog:/datalog
+    logging:
+      options:
+        max-size: 1g
+
+### Kafka Stream Apps
+
+  rulesprocessor:
+    hostname: rulesprocessor
+    container_name: rulesprocessor
+    image: ${BRIDGES}
+    restart: always
+    depends_on:
+      - kafka
+      - services
+    environment:
+      #JAVA_OPTS: "-agentpath:/app/jprofiler/bin/linux-x64/libjprofilerti.so=nowait"
+      MEM_XMS: 2g
+      MEM_XMX: 4g
+      VIZIX_ESPER: 'no'
+      VIZIX_BRIDGE_TYPE: rulesprocessor
+      VIZIX_KAFKA_CODE: RulesProcessor
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}
+      VIZIX_LOG_LEVEL: 'INFO'
+      VIZIX_KAFKA_CACHE_TICKLE_MODE: 'MONGO_INJECTOR'
+      #VIZIX_STREAM_APP_LOWMEM_MINIMUM_GC_WAIT: ## defaults 30 seconds.
+      #VIZIX_CRITICAL_MEMORY_THRESHOLD: ## default 200 MB  (cleans up all memory when 200MB is free for the container)
+      #VIZIX_WARNING_MEMORY_THRESHOLD: ## defaults 600 MB (cleans up some memory when 600MB is free for the container)
+      #VIZIX_THING_CACHE_SIZE_MB: ## 2048 amount of memory reserved for GC
+      #VIZIX_THING_CACHE_EVICTION_TIME: 30240 In MINUTES forced eviction after 3 weeks of no use
+
+  mongoinjector:
+    hostname: mongoinjector
+    container_name: mongoinjector
+    image: ${BRIDGES}
+    restart: always
+    depends_on:
+      - kafka
+      - services
+    environment:
+      MEM_XMS: 2g
+      MEM_XMX: 4g
+      VIZIX_BRIDGE_TYPE: mongoingestor
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}
+
+  hbridge:
+    hostname: hbridge
+    container_name: hbridge
+    image: ${BRIDGES}
+    restart: always
+    depends_on:
+      - kafka
+      - services
+  #  ports:
+  #   - "9090:8080"
+    environment:
+      VIZIX_BRIDGE_TYPE: httpbridge
+      VIZIX_KAFKA_SERVERS: $KAFKA_ADDRESS
+    # volumes:
+    #   - ${VIZIX_DATA_PATH}/httpbridge-data:/var/vizix
+
+  m2k:
+    hostname: m2k
+    container_name: m2k
+    image: ${BRIDGES}
+    restart: always
+    depends_on:
+      - kafka
+      - services
+    environment:
+      VIZIX_BRIDGE_TYPE: m2kbridge
+      VIZIX_KAFKA_SERVERS: $KAFKA_ADDRESS
+      VIZIX_MQTTHOST: mqtt
+    # volumes:
+    #   - ${VIZIX_DATA_PATH}/m2k-data:/var/vizix
+
+  k2m:
+    hostname: k2m
+    container_name: k2m
+    image: ${BRIDGES}
+    restart: always
+    depends_on:
+      - kafka
+      - services
+    environment:
+      VIZIX_BRIDGE_TYPE: k2mbridge
+      VIZIX_KAFKA_SERVERS: $KAFKA_ADDRESS
+      VIZIX_MQTTHOST: mqtt
+#    volumes:
+#      - ${VIZIX_DATA_PATH}/k2m-data:/var/vizix
+
+  transformbridge:
+    hostname: transformbridge
+    container_name: transformbridge
+    image: ${BRIDGES}
+    restart: always
+    depends_on:
+      - kafka
+      - services
+    environment:
+      VIZIX_BRIDGE_TYPE: transformbridge
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}
+#    volumes:
+#      - ${VIZIX_DATA_PATH}/transformbridge-data:/var/vizix
+
+  actionprocessor:
+    hostname: actionprocessor
+    container_name: actionprocessor
+    image: ${BRIDGES}
+    restart: always
+    depends_on:
+      - kafka
+      - services
+    environment:
+      VIZIX_BRIDGE_TYPE: actionprocessor
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}
+#    volumes:
+#      - ${VIZIX_DATA_PATH}/actionprocessor-data:/var/vizix
+
+  starflexcontrolapp:
+    hostname: starflexcontrolapp
+    container_name: starflexcontrolapp
+    image: ${BRIDGES}
+    restart: always
+    depends_on:
+      - kafka
+      - services
+    environment:
+      VIZIX_BRIDGE_TYPE: starflexcontrolapp
+      VIZIX_KAFKA_SERVERS: ${KAFKA_ADDRESS}
+      VIZIX_KAFKA_CODE: starflex
+#    volumes:
+#      - ${VIZIX_DATA_PATH}/actionprocessor-data:/var/vizix

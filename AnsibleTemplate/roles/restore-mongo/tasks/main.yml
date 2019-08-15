@@ -1,0 +1,8 @@
+---
+# tasks file for roles/restore-mongo
+- name: Restore a Mongo BackUP
+  import_tasks: restore.yml
+  vars:
+    mongo_file_name: "{{ mongo_backup_fileurl | basename }}"
+    mongo_archive_file: "{{mongo_file_name.split('.gz')[0]}}"
+  when: (ansible_os_family|lower == 'debian') or (ansible_os_platform|lower == 'debian')

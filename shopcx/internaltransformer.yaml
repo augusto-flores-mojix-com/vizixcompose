@@ -1,0 +1,28 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  internaltransformer:
+    image: mojix/vizix-api-transformer:caddy
+    environment:
+      EXTERNALTRANSFORMER_HOSTNAME: "externaltransformer"
+      EXTERNALTRANSFORMER_PORT: "8080"
+      BASIC_AUTH_STRING: "cm9*******IQ=="
+#    ports:
+#     - 18080:8080
+    networks:
+      - iot
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ###
+        tag: internaltransformer

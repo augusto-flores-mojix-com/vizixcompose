@@ -1,0 +1,1 @@
+docker run -d --name mongo --restart=always --net host -v /data/mongo:/data/db --memory=15g --privileged mongo:4 numactl --interleave=all mongod --storageEngine=wiredTiger --journal --slowms=5000 --profile=1 --cpu --dbpath=/data/db --directoryperdb --wiredTigerDirectoryForIndexes --wiredTigerCacheSizeGB 10 --auth --bind_ip_all --replSet ###replicaRS

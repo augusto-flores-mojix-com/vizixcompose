@@ -1,0 +1,9 @@
+- name: Docker Login...
+  shell: docker login --username={{docker_user}} --password={{docker_pass}}
+  register: login_result
+  ignore_errors: True
+  no_log: True
+- name: Login result
+  fail:
+    msg: "Unauthorized: incorrect username or password"
+  when: "'Error' in login_result.stderr"

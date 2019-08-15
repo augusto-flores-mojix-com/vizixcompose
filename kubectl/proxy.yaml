@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    mojix.service: proxy
+  name: proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: proxy
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: proxy
+    spec:
+      containers:
+      - args:
+        - --conf
+        - /etc/caddyfile-vizix
+        - -http2=false
+        image: mojix/proxy:0.10.11
+        name: proxy
+        ports:
+        - containerPort: 80
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/caddyfile-vizix
+          name: caddyfile-vizix-configmap
+          subPath: caddyfile-vizix
+          readOnly: true
+      hostname: proxy
+      restartPolicy: Always
+      volumes:
+      - name: caddyfile-vizix-configmap
+        configMap:
+          name: caddyfile-vizix-configmap
+      imagePullSecrets:
+        - name: mojix-registry
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: proxy
+  name: proxy
+spec:
+  ports:
+  - name: "80"
+    port: 80
+    targetPort: 80
+  selector:
+    mojix.service: proxy
+status:
+  loadBalancer: {}

@@ -1,0 +1,54 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  sohgenerator:
+    image: mojix/sohgenerator:bug_RPLAT-2741
+    environment:
+      SECRETS: false
+      MEM_XMS: 2g
+      MEM_XMX: 2g
+      VERTX_OPTS: '-Dvertx.options.blockedThreadCheckInterval=30000'
+#      JAVA_OPTS: '-agentpath:/app/jprofiler/bin/linux-x64/libjprofilerti.so=nowait'
+      VIZIX_HTTP_BRIDGE_URI: 'http://hbridge:8080/http-bridge'
+      VIZIX_ANALYTICS_SOH_CREATOR_URI: 'http://notebooks-api:8999/SOHCreator'
+      VIZIX_ANALYTICS_APIKEY: 'PASSWORD'
+      VIZIX_THING_BRIDGE_MESSAGE_SIZE: 500
+      VIZIX_SERVICES_API: 'http://services:8080/riot-core-services/api'
+      VIZIX_SERVICES_APIKEY: ##"API_KEY"
+      VIZIX_KAFKA_SERVERS: 'kafka:9092'
+      VIZIX_ANALYTICS_ENABLE_SEND_STORE_CONFIG: 'true'
+      ### MONGO
+      VIZIX_MONGO_PRIMARY: 'mongo:27017'
+#      VIZIX_MONGO_SECONDARY: ""
+      VIZIX_MONGO_AUTHDB: 'admin'
+      VIZIX_MONGO_DB: 'viz_root'
+      VIZIX_MONGO_USERNAME: 'admin'
+      VIZIX_MONGO_PASSWORD: ##MONGODB_PASS
+#      VIZIX_MONGO_REPLICASET: #'MONGODB_REPLICASET'
+#      VIZIX_MONGO_SSL: 'true'
+#      VIZIX_MONGO_ATLAS_ENVIRONMENT=true
+#      VIZIX_MONGO_ATLAS_CLOUD= '##ATLAS_URL'
+#      VIZIX_MONGO_ATLAS_USER= '##ATLAS_USER'
+#      VIZIX_MONGO_ATLAS_APIKEY= '##ATLAS_API_KEY'
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+      resources:
+        limits:
+          memory: 2300m
+#    logging:
+#      driver: syslog
+#      options:
+#        syslog-address: udp:// ##PAPERTRAIL_LINK
+#        tag: sohgenerator

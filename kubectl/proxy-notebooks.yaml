@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    mojix.service: proxy-notebooks
+  name: proxy-notebooks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      mojix.service: proxy-notebooks
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        mojix.service: proxy-notebooks
+    spec:
+      containers:
+      - args:
+        - --conf
+        - /etc/caddyfile-notebooks
+        - -http2=false
+        image: mojix/proxy:0.10.11
+        name: proxy-notebooks
+        ports:
+        - containerPort: 80
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/caddyfile-notebooks
+          name: caddyfile-notebooks-configmap
+          subPath: caddyfile-notebooks
+          readOnly: true
+      hostname: proxy-notebooks
+      restartPolicy: Always
+      volumes:
+      - name: caddyfile-notebooks-configmap
+        configMap:
+          name: caddyfile-notebooks-configmap
+      imagePullSecrets:
+        - name: mojix-registry
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    mojix.service: proxy-notebooks
+  name: proxy-notebooks
+spec:
+  ports:
+  - name: "80"
+    port: 80
+    targetPort: 80
+  selector:
+    mojix.service: proxy-notebooks
+status:
+  loadBalancer: {}

@@ -1,0 +1,36 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+volumes:
+  static:
+
+services:
+
+  tag-auth:
+    image: docker-pull.factory.shopcx.io/tag-auth-api:3.10.0
+    ports:
+      - target: 8080
+        published: 8099
+        protocol: tcp
+        mode: host
+    environment:
+      KEY_SECRET: "FLXZilOA"
+      KEY_SALT: "LLTUS5oI"
+      JAVA_OPTS: -Djdbc-username=root -Djdbc-password=wildfowl_crib_sidearm -Djdbc-url=shopcx-mysql -Dtagauth-key-secret=FLXZilOA -Dtagauth-key-salt=LLTUS5oI
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.host == ###
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ###
+        tag: tag-auth

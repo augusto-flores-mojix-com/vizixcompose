@@ -1,0 +1,167 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+
+  mysql1:
+    image: mysql:8
+    ports:
+      - target: 3306
+        published: 3306
+        protocol: tcp
+        mode: host
+    command:
+      - --max_allowed_packet=1024M
+      - --max_connections=7000
+      - --interactive_timeout=3720
+      - --wait_timeout=3720
+      - --lower_case_table_names=0
+      - --net_write_timeout=37200
+      - --net_read_timeout=3720
+      - --innodb_lock_wait_timeout=600
+      - --skip-name-resolve
+      - --innodb_thread_sleep_delay=6000000
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8
+      - --collation-server=utf8_unicode_ci
+      - --skip-host-cache
+      - --server-id=1
+      - --binlog_do_db=riot_main
+      - --master-info-repository=TABLE
+      - --relay-log-info-repository=TABLE
+      - --gtid_mode=ON
+      - --enforce_gtid_consistency=ON
+      - --log_slave_updates=ON
+      - --auto_increment_increment=3
+      - --auto_increment_offset=1
+      - --slave_exec_mode=IDEMPOTENT
+    volumes:
+      - /data/mysql1:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=riot_main
+      - MYSQL_ROOT_PASSWORD= ##VIZIX_DB_PASSWORD
+      - HOSTNAME=mysql1
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: mysql1
+#    extra_hosts:
+#      - "host:x.x.x.x"
+
+  mysql2:
+    image: mysql:8
+    ports:
+      - target: 3306
+        published: 3306
+        protocol: tcp
+        mode: host
+    command:
+      - --max_allowed_packet=1024M
+      - --max_connections=7000
+      - --interactive_timeout=3720
+      - --wait_timeout=3720
+      - --lower_case_table_names=0
+      - --net_write_timeout=3720
+      - --net_read_timeout=3720
+      - --innodb_lock_wait_timeout=600
+      - --skip-name-resolve
+      - --innodb_thread_sleep_delay=6000000
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8
+      - --collation-server=utf8_unicode_ci
+      - --skip-host-cache
+      - --server-id=2
+      - --binlog_do_db=riot_main
+      - --master-info-repository=TABLE
+      - --relay-log-info-repository=TABLE
+      - --gtid_mode=ON
+      - --enforce_gtid_consistency=ON
+      - --log_slave_updates=ON
+      - --auto_increment_increment=3
+      - --auto_increment_offset=2
+      - --slave_exec_mode=IDEMPOTENT
+    volumes:
+      - /data/mysql2:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=riot_main
+      - MYSQL_ROOT_PASSWORD= ##VIZIX_DB_PASSWORD
+      - HOSTNAME=mysql2
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: mysql2
+#    extra_hosts:
+#      - "host:x.x.x.x"
+
+  mysql3:
+    image: mysql:8
+    ports:
+      - target: 3306
+        published: 3306
+        protocol: tcp
+        mode: host
+    command:
+      - --max_allowed_packet=1024M
+      - --max_connections=7000
+      - --interactive_timeout=3720
+      - --wait_timeout=3720
+      - --lower_case_table_names=0
+      - --net_write_timeout=3720
+      - --net_read_timeout=3720
+      - --innodb_lock_wait_timeout=600
+      - --skip-name-resolve
+      - --innodb_thread_sleep_delay=6000000
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8
+      - --collation-server=utf8_unicode_ci
+      - --skip-host-cache
+      - --server-id=3
+      - --binlog_do_db=riot_main
+      - --master-info-repository=TABLE
+      - --relay-log-info-repository=TABLE
+      - --gtid_mode=ON
+      - --enforce_gtid_consistency=ON
+      - --log_slave_updates=ON
+      - --auto_increment_increment=3
+      - --auto_increment_offset=3
+      - --slave_exec_mode=IDEMPOTENT
+    volumes:
+      - /data/mysql3:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=riot_main
+      - MYSQL_ROOT_PASSWORD= ##VIZIX_DB_PASSWORD
+      - HOSTNAME=mysql3
+    networks:
+      - iot
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.host == ##HOST_LABEL
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ##PAPERTRAIL_LINK
+        tag: mysql3
+#    extra_hosts:
+#      - "host:x.x.x.x"

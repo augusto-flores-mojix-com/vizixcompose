@@ -1,0 +1,16 @@
+---
+# tasks file for roles/launch-vizix
+- name: Perform Docker Login
+  import_tasks: docker_login.yml
+- name: Copy and parse required files
+  import_tasks: copy_files.yml
+- name: Launch base containers
+  import_tasks: base_launch.yml
+- name: Create mongo user
+  include_role:
+    name: create-mongo-user
+  ignore_errors: yes
+- name: Launch Vizix Tools
+  import_tasks: vizix_tools_launch.yml
+- name: Launch Vizix
+  import_tasks: vizix_launch.yml

@@ -1,0 +1,5 @@
+VIZIX_DATA_PATH=/data/
+
+MYSQL=mysql:8.0
+VIZIX_DB_DATABASE=riot_main
+VIZIX_DB_PASSWORD=control123!

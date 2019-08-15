@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kafka-1-disk
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 100Gi
+  accessModes:
+  - ReadWriteOnce
+  nfs:
+    path: /data/nfs/kafka-1
+    server: 172.15.0.98
+  persistentVolumeReclaimPolicy: Retain
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    mojix.service: kafka-1-disk
+  name: kafka-1-disk
+spec:
+  storageClassName: manual
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kafka-2-disk
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 100Gi
+  accessModes:
+  - ReadWriteOnce
+  nfs:
+    path: /data/nfs/kafka-2
+    server: 172.15.0.98
+  persistentVolumeReclaimPolicy: Retain
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    mojix.service: kafka-2-disk
+  name: kafka-2-disk
+spec:
+  storageClassName: manual
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kafka-3-disk
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 100Gi
+  accessModes:
+  - ReadWriteOnce
+  nfs:
+    path: /data/nfs/kafka-3
+    server: 172.15.0.98
+  persistentVolumeReclaimPolicy: Retain
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    mojix.service: kafka-3-disk
+  name: kafka-3-disk
+spec:
+  storageClassName: manual
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ImageStream
+metadata:
+  creationTimestamp: null
+  labels:
+    mojix.service: proxy
+  name: proxy
+spec:
+  tags:
+  - annotations: null
+    from:
+      kind: DockerImage
+      name: mojix/proxy:0.10.11
+    generation: null
+    importPolicy: {}
+    name: 0.10.11
+status:
+  dockerImageRepository: ""

@@ -1,0 +1,4 @@
+- hosts: restore-mysql
+  roles:
+    - { role: restore-mysql }
+  become: yes

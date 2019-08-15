@@ -1,0 +1,24 @@
+---
+- hosts: new
+  remote_user: vizix
+  become: true
+  gather_facts: false
+  pre_tasks:
+    - raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+      register: output
+      changed_when: output.stdout != ""
+    - setup:
+  roles:
+    - role: docker
+      uninstall_previous_docker_versions: true
+      docker_edition: ce
+      docker_aufs_enabled: false
+      daemon_json:
+        storage-driver: overlay2
+        experimental: true
+        metrics-addr: 0.0.0.0:4999
+        log-level: debug
+        log-driver: json-file
+        log-opts:
+          max-file: "3"
+          max-size: "10m"

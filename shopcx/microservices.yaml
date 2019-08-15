@@ -1,0 +1,177 @@
+version: "3.3"
+
+networks:
+  iot:
+    driver: overlay
+    attachable: true
+
+services:
+  configuration-api-devices:
+    image: mojix/configuration-api-devices:v6.45.0
+    environment:
+      locations.api.host: internaltransformer
+      locations.api.port: 8080
+      statemachine.api.configuration.firmware.folder: /usr/local/firmware
+      JAVA_OPTS: '-DMYSQL_DATABASE=configurationDevices -DMYSQL_USER=root -DMYSQL_PASSWORD=##### -DMYSQL_URL=shopcx-mysql -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1  -XshowSettings:vm' 
+    volumes:
+      - /data/shopcx/configuration-api-devices/firmware:/usr/local/firmware
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ### HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// ####
+        tag: configuration-api-devices
+
+  configuration-api-languages:
+    image: mojix/configuration-api-languages:v6.45.0
+    environment:
+      locations.api.host: internaltransformer
+      locations.api.port: 8080
+      JAVA_OPTS: '-DMYSQL_DATABASE=configurationLanguages -DMYSQL_USER=root -DMYSQL_PASSWORD=##### -DMYSQL_URL=shopcx-mysql -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1  -XshowSettings:vm' 
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ### HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// #####
+        tag: configuration-api-languages
+        
+  serialization-api:
+    image: mojix/serialization-api:v6.45.0
+    environment:
+      locations.api.host: internaltransformer
+      locations.api.port: 8080
+      epcis.input.api.host: internaltransformer
+      epcis.input.api.port: 8080
+      serialization.persistence.lock.timeout: 1000
+      JAVA_OPTS: '-DMYSQL_DATABASE=serialization -DMYSQL_USER=root -DMYSQL_PASSWORD=##### -DMYSQL_URL=shopcx-mysql -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -XshowSettings:vm'
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == ###HOST
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ###LINK
+        tag: serialization-api
+
+  printing-api:
+    image: mojix/printing-api:v6.45.0
+    environment:
+      printing.jobs.clean.cron: 37 0/5 * * * ?
+      printing.hibernate.hbm2ddl.auto: 'false'
+      printing.hibernate.show.sql: 'false'
+      devices.api.host: 'reverse-proxy-devices'
+      devices.api.port: '8081'
+      devices.api.war.name: 'statemachine-api-configuration'
+      locations.api.host: 'internaltransformer'
+      locations.api.port: '8080'
+      locations.api.war.name: 'statemachine-api-configuration'
+      product.api.host: 'internaltransformer'
+      product.api.port: '8080'
+      product.api.war.name: 'product-api'
+      serialization.api.host: 'serialization-api'
+      serialization.api.port: '8080'
+      serialization.api.war.name: 'serialization-api'
+      configuration.cache.expiration.time.minutes: 10
+      rabbitmq.server.host: 'shopcx-rabbitmq'
+      rabbitmq.server.port: '5672'
+      rabbitmq.user: 'admin'
+      rabbitmq.password: ####
+      JAVA_OPTS: '-DMYSQL_DATABASE=printing -DMYSQL_USER=root -DMYSQL_PASSWORD=#### -DMYSQL_URL=shopcx-mysql -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -XshowSettings:vm'
+    networks:
+      - iot
+    deploy:
+      placement:
+        constraints:
+          - node.labels.host == #####
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp:// #####
+        tag: printing-api
+
+  dp-instant-event-generation:
+      image: mojix/dp-instant-event-generation:v6.45.0
+#      ports:
+#          - 8080:8080
+#          - 4444:4444
+      restart: unless-stopped
+      environment:
+          ## rabbitmq EPCIS listener
+          - amqp.host=shopcx-rabbitmq
+          - amqp.port=5672
+          - amqp.user=whiterabbit
+          - amqp.password=rabbit
+          #- amqp.queue.retry.timer.ms=5000
+          #- amqp.queue.retry.timer.plage.ms=2000
+          #- amqp.qos.nb=0
+          ## Configuration API 
+          - api.configuration.host=internaltransformer
+          - api.configuration.port=8080
+          #- api.configuration.timeout.ms=10000
+          #- api.configuration.failure.max=5
+          #- api.configuration.reset.timeout.ms=30000
+          #- api.configuration.retry.max=0
+          ## EPCIS Input API 
+          - api.epcis.input.host=internaltransformer
+          - api.epcis.input.port=8080
+          #- api.epcis.input.timeout.ms=10000
+          #- api.epcis.input.failure.max=5
+          #- api.epcis.input.reset.timeout.ms=30000
+          #- api.epcis.input.retry.max=0
+          ## monitoring
+          #- hystrix.port=4444
+          - influxdb.uri=http://shopcx-influxdb:8086
+          - influxdb.db=asnauto
+          - influxdb.user=admin
+          - influxdb.password=156p!mi56d15
+          ## verticles settings
+          #- verticle.factor.nb=1
+          #- verticle.filter.nb=1
+          #- verticle.epcisinput.nb=1
+          #- verticle.receiving.nb=1
+          #- verticle.configuration.nb=1
+      networks:
+        - iot
+      deploy:
+        placement:
+          constraints:
+            - node.labels.host == ###
+      logging:
+        driver: syslog
+        options:
+          syslog-address: udp:// ###
+          tag: dp-instant-event-generation
+
+  dp-retroactive-event-generation:
+      image: mojix/dp-retroactive-event-generation:v6.45.0
+      environment:
+          url.api.configuration.locations: 'http://internaltransformer:8080'
+          url.api.epcis.search: 'http://internaltransformer:8080'
+          url.api.epcis.input: 'http://internaltransformer:8080'
+          retroactive.receiving.schedule.cron: '45 45 * * * ?'
+          retroactive.receiving.start.time.default: '2000-01-01T00:00:00.000Z'
+          JAVA_OPTS: '-DMYSQL_DATABASE=aggregates -DMYSQL_USER=root -DMYSQL_PASSWORD=#### -DMYSQL_URL=shopcx-mysql -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1  -XshowSettings:vm'
+      networks:
+        - iot
+      deploy:
+        placement:
+          constraints:
+            - node.labels.host == ###
+      logging:
+        driver: syslog
+        options:
+          syslog-address: ###
+          tag: dp-retroactive-event-generation
